@@ -30,7 +30,7 @@ public class Main {
     // Entry of start method
     public void start(String[] args) throws Exception {
 
-        Log.PrintAndLog("Hello world");
+        Log.PrintAndLog("CurrencyProphet been launched. all rights reserved");
 
         File path = new File(Constant.DATA_ROOT);
 
@@ -57,7 +57,7 @@ public class Main {
         Log.PrintAndLog("Monitor started...");
 
         // Task executor
-        ExecutorService taskExecutor = Executors.newSingleThreadExecutor();
+        ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
@@ -74,5 +74,7 @@ public class Main {
             new ResultPublisher().Start();
         });
 
+        System.out.println("Main thread is waiting for child threads...");
+        taskExecutor.wait();
     }
 }
