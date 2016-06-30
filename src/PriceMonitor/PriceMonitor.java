@@ -1,11 +1,12 @@
 package src.PriceMonitor;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import src.Utility.Log;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -33,27 +34,6 @@ public class PriceMonitor {
 
     static final String BTC = "btc";
 
-    static int count = 0;
-    InterruptedException exc
-
-        try
-
-        {
-            while (true) {
-                Thread.sleep(3 * 1000);
-
-                System.out.println("Hello PriceMonitor is running: " + PriceMonitor.count++);
-            }
-        }
-
-    catch(
-
-    {
-        Log.PrintAndLog("Price monitor thread Interrupted: " + exc.getMessage());
-    }
-
-    )
-
     public void Start() {
 
         URL soapUrl = null;
@@ -64,29 +44,20 @@ public class PriceMonitor {
             e.printStackTrace();
             return;
         }
+        JSONParser parser = new JSONParser();
 
         try {
             InputStream is = soapUrl.openStream();
-            String result = "";
-            JSONObject obj = new JSONObject(result);
-            obj.get("price");
+            Reader rd = new InputStreamReader(is);
+            Object obj = parser.parse(rd);
+
+            JSONObject jsonObj = (JSONObject) obj;
+
+            String price = (String) jsonObj.get("price");
+            System.out.println("JSON price: " + price);
+
         } catch (Exception exc) {
+            Log.PrintAndLog("Price monitor thread Interrupted: " + exc.getMessage());
         }
-        try {
-            try (InputStream is = soapUrl.openStream();
-                 JSONReader rdr = Json.createReader(is)) {
-                JSONObject obj = rdr.readObject();
-                JSONArray results = obj.getJSONArray("data");
-                for (JSONObject result : results.getValuesAs(JSONObject.class)) {
-                    System.out.print(result.getJsonObject("from").getString("name"));
-                    System.out.print(": ");
-                    System.out.println(result.getString("message", ""));
-                    System.out.println("-----------");
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     }
 }

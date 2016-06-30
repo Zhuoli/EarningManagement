@@ -7,13 +7,15 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" exported="">
+    <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/json-20160212.jar!/" />
+          <root url="jar://$MODULE_DIR$/json-simple-1.1.1.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/.ideaLibSources/json-simple-1.1.1-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
   </component>
