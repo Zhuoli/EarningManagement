@@ -1,13 +1,12 @@
 package src;
 
+import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
 import src.PriceTrendProphet.TrendProphet;
 import src.ResultPublisher.ResultPublisher;
-import src.Utility.Constant;
 import src.Utility.Email;
 import src.Utility.Log;
 
-import java.io.File;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +21,7 @@ public class Main {
         try {
             new Main().start(args);
         } catch (Exception exc) {
-            Log.PrintAndLog(exc.getMessage());
+            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
         }
     }
 
@@ -31,13 +30,6 @@ public class Main {
     public void start(String[] args) throws Exception {
 
         Log.PrintAndLog("CurrencyProphet been launched. all rights reserved");
-
-        File path = new File(Constant.DATA_ROOT);
-
-        // Create Data directory if not exist
-        if (!path.exists() || !path.isDirectory()) {
-            path.mkdir();
-        }
 
         // Initialize email recipient
         Scanner scanner = new Scanner(System.in);
@@ -56,8 +48,16 @@ public class Main {
         Log.PrintAndLog("Email authenticate succeed");
         Log.PrintAndLog("Monitor started...");
 
+
         // Task executor
         ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
+
+        DataManager dataManager = new DataManager();
+
+        // Submit data manager
+        taskExecutor.submit(() -> {
+            dataManager.Start();
+        });
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
