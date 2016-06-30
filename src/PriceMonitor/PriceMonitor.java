@@ -36,14 +36,19 @@ public class PriceMonitor {
 
     public void Start() {
 
-        URL soapUrl = null;
 
         try {
-            soapUrl = new URL(PriceMonitor.BASE_URL + "/" + BTC);
+            URL soapUrl = new URL(PriceMonitor.BASE_URL + "/" + BTC);
+            String priceJson = this.GetPriceString(soapUrl);
+            System.out.println(priceJson);
         } catch (MalformedURLException e) {
             e.printStackTrace();
             return;
         }
+    }
+
+    public String GetPriceString(URL soapUrl) {
+
         JSONParser parser = new JSONParser();
 
         try {
@@ -54,10 +59,11 @@ public class PriceMonitor {
             JSONObject jsonObj = (JSONObject) obj;
 
             String price = (String) jsonObj.get("price");
-            System.out.println("JSON price: " + price);
+            return price;
 
         } catch (Exception exc) {
             Log.PrintAndLog("Price monitor thread Interrupted: " + exc.getMessage());
+            return exc.getMessage();
         }
     }
 }
