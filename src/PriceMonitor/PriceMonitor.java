@@ -30,8 +30,11 @@ public class PriceMonitor {
         "change":"1.06","timestamp":"1467265624.828"
         }
      */
+
+    // Base URL for SOAP query
     static final String BASE_URL = "http://coinmarketcap-nexuist.rhcloud.com/api";
 
+    // Currency Name
     static final String BTC = "btc";
 
     public void Start() {
