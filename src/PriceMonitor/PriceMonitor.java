@@ -1,8 +1,6 @@
 package src.PriceMonitor;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import src.Utility.Log;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -40,10 +38,16 @@ public class PriceMonitor {
     public void Start() {
 
         String soapString = this.GetSOAPString(PriceMonitor.BASE_URL + "/" + BTC);
-        String priceJson = this.GetPriceString(soapString);
+        int priceJson = this.GetPriceString(soapString);
         System.out.println(priceJson);
     }
 
+    /**
+     * Get soap string from the given URL
+     *
+     * @param url : url of soap address
+     * @return soap string
+     */
     public String GetSOAPString(String url) {
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -69,21 +73,13 @@ public class PriceMonitor {
         return "";
     }
 
-    public String GetPriceString(String soapString) {
+    /**
+     * @param soapString : SOAP string
+     * @return Price in USD
+     */
+    public int GetPriceString(String soapString) {
 
-        JSONParser parser = new JSONParser();
-
-        try {
-            Object obj = parser.parse(soapString);
-
-            JSONObject jsonObj = (JSONObject) obj;
-
-            String price = (String) jsonObj.get("price");
-            return price;
-
-        } catch (Exception exc) {
-            Log.PrintAndLog("Price monitor thread Interrupted: " + exc.getMessage());
-            return exc.getMessage();
-        }
+        JSONObject jsonObj = new JSONObject(soapString);
+        return jsonObj.getJSONObject("price").getInt("usd");
     }
 }
