@@ -6,7 +6,7 @@ import org.junit.Test
 /**
  * Created by zhuoli on 6/29/16.
  */
-class PriceMonitorTest extends groovy.util.GroovyTestCase {
+public class PriceMonitorTest {
 
     private PriceMonitor priceMonitor;
 
@@ -16,7 +16,22 @@ class PriceMonitorTest extends groovy.util.GroovyTestCase {
     }
 
     @Test
-    void GetPriceStringTest() {
+    public void GetPriceStringTest() {
+        this.priceMonitor.GetPriceString();
+    }
+
+    @Test
+    public void testStart() throws Exception {
+
+    }
+
+    @Test
+    public void testGetSOAPString() throws Exception {
+
+    }
+
+    @Test
+    public void testGetPriceString() throws Exception {
 
     }
 }
