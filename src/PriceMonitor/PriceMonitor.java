@@ -4,10 +4,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import src.Utility.Log;
 
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
@@ -36,25 +36,42 @@ public class PriceMonitor {
 
     public void Start() {
 
-
-        try {
-            URL soapUrl = new URL(PriceMonitor.BASE_URL + "/" + BTC);
-            String priceJson = this.GetPriceString(soapUrl);
-            System.out.println(priceJson);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            return;
-        }
+        String soapString = this.GetSOAPString(PriceMonitor.BASE_URL + "/" + BTC);
+        String priceJson = this.GetPriceString(soapString);
+        System.out.println(priceJson);
     }
 
-    public String GetPriceString(URL soapUrl) {
+    public String GetSOAPString(String url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+
+            connection.setRequestMethod("GET");
+            connection.connect();
+            int status = connection.getResponseCode();
+
+            if (status != 200) {
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuffer response = new StringBuffer();
+            String inputLine;
+            while ((inputLine = reader.readLine()) != null) {
+                response.append(inputLine);
+            }
+            return response.toString();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public String GetPriceString(String soapString) {
 
         JSONParser parser = new JSONParser();
 
         try {
-            InputStream is = soapUrl.openStream();
-            Reader rd = new InputStreamReader(is);
-            Object obj = parser.parse(rd);
+            Object obj = parser.parse(soapString);
 
             JSONObject jsonObj = (JSONObject) obj;
 
