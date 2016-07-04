@@ -12,7 +12,7 @@ import java.net.URL;
  * Created by zhuoli on 6/23/16.
  */
 
-public class PriceMonitor {
+public class CryptoCurrencyPriceMonitor {
 
     /*
     {
@@ -38,13 +38,13 @@ public class PriceMonitor {
 
     public void Start() {
 
-        String soapString = this.GetSOAPString(PriceMonitor.BASE_URL + "/" + BTC);
-        int priceJson = this.GetPriceString(soapString);
+        String soapString = this.GetSOAPString(CryptoCurrencyPriceMonitor.BASE_URL + "/" + BTC);
+        double priceJson = this.GetPriceString(soapString);
         System.out.println(priceJson);
     }
 
-    public int GetPriceForCurrency(CurrencyEnum currencyEnum) {
-        String str = this.GetSOAPString(PriceMonitor.BASE_URL + "/" + currencyEnum.toString());
+    public double GetPriceForCurrency(CurrencyEnum currencyEnum) {
+        String str = this.GetSOAPString(CryptoCurrencyPriceMonitor.BASE_URL + "/" + currencyEnum.toString());
         return this.GetPriceString(str);
     }
 
@@ -83,9 +83,9 @@ public class PriceMonitor {
      * @param soapString : SOAP string
      * @return Price in USD
      */
-    public int GetPriceString(String soapString) {
+    public double GetPriceString(String soapString) {
 
         JSONObject jsonObj = new JSONObject(soapString);
-        return jsonObj.getJSONObject("price").getInt("usd");
+        return jsonObj.getJSONObject("price").getDouble("usd");
     }
 }
