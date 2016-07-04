@@ -1,7 +1,7 @@
 package src;
 
 import src.DataManager.DataManager;
-import src.PriceMonitor.PriceMonitor;
+import src.PriceMonitor.CryptoCurrencyPriceMonitor;
 import src.PriceTrendProphet.TrendProphet;
 import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
@@ -61,7 +61,7 @@ public class Main {
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
-            new PriceMonitor().Start();
+            new CryptoCurrencyPriceMonitor().Start();
         });
 
         // Submit Price Prophet task
