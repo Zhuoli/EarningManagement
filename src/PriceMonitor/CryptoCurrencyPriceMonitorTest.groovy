@@ -7,7 +7,7 @@ import org.junit.Test
 /**
  * Created by zhuoli on 6/29/16.
  */
-public class PriceMonitorTest {
+public class CryptoCurrencyPriceMonitorTest {
 
     // Crypto Currency Price Monitor
     private CryptoCurrencyPriceMonitor cryptoCurrencyPriceMonitor;

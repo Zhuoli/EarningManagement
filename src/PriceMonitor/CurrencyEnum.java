@@ -6,11 +6,13 @@ package src.PriceMonitor;
  */
 public enum CurrencyEnum {
     BitCoin {
+        @Override
         public String toString() {
             return "btc";
         }
     },
     LiteCoin {
+        @Override
         public String toString() {
             return "ltc";
         }
