@@ -1,6 +1,7 @@
 package src.PriceMonitor;
 
 import com.joanzapata.utils.Strings;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,17 +15,17 @@ import java.net.URL;
 public class StockPriceMonitor {
 
     // Referrence: http://dev.markitondemand.com/MODApis/#stockquote
-    final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2/Quote/jsonp?symbol=AAPL&callback=hellworld";
+    static final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2/Quote";
 
     public double GetPrice(String symbol) {
         String url = this.ComposeUrl(symbol);
         String response = this.GetHttpResponse(url);
-        return this.QuoteStockPrice(response);
+        return this.ParseMarkitondemandPrice(response);
     }
 
     public String ComposeUrl(String symbol) {
 
-        return Strings.format("http://dev.markitondemand.com/MODApis/Api/v2/Quote/{type}?symbol={symbol}&callback=helloworld").with("type", "jsonp").with("symbol", symbol).build();
+        return Strings.format("{baseUrl}/{type}?symbol={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("type", "json").with("symbol", symbol).build();
     }
 
     /**
@@ -58,8 +59,16 @@ public class StockPriceMonitor {
         return "";
     }
 
-    public double QuoteStockPrice(String str) {
-
-        return 0;
+    /**
+     * Parse Markitondemand JSON Price.
+     * E.g:
+     * hellworld({"Status":"SUCCESS","Name":"Apple Inc","Symbol":"AAPL","LastPrice":95.895,"Change":0.295000000000002,"ChangePercent":0.308577405857742,"Timestamp":"Fri Jul 1 15:59:00 UTC-04:00 2016","MSDate":42552.6659722222,"MarketCap":525257670375,"Volume":2562784,"ChangeYTD":105.26,"ChangePercentYTD":-8.89701691050732,"High":96.46,"Low":95.33,"Open":95.48})
+     *
+     * @param JSON String
+     * @return Price.
+     */
+    protected double ParseMarkitondemandPrice(String soapString) {
+        JSONObject jsonObj = new JSONObject(soapString);
+        return jsonObj.getDouble("LastPrice");
     }
 }
