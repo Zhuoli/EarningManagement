@@ -1,7 +1,8 @@
-package src.PriceMonitor;
+package src.PriceMonitor.stock;
 
 import com.joanzapata.utils.Strings;
 import org.json.JSONObject;
+import src.PriceMonitor.PriceMonitor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,20 +13,41 @@ import java.net.URL;
 /**
  * Created by zhuoli on 7/4/16.
  */
-public class StockPriceMonitor {
+public class StockPriceMonitor extends PriceMonitor {
 
     // Referrence: http://dev.markitondemand.com/MODApis/#stockquote
-    static final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2/Quote";
+    static final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2";
 
+    /**
+     * Get stock price for the given Symbol.
+     *
+     * @param symbol
+     * @return price
+     */
     public double GetPrice(String symbol) {
-        String url = this.ComposeUrl(symbol);
+        String url = this.ComposeQuoteUrl(symbol);
         String response = this.GetHttpResponse(url);
         return this.ParseMarkitondemandPrice(response);
     }
 
-    public String ComposeUrl(String symbol) {
+    /**
+     * Company name look up.
+     *
+     * @param symbol
+     * @return company name
+     */
+    public String CompanyLookUp(String symbol) {
+        String url = this.ComposeLookupUrl(symbol);
+        return url;
+    }
 
-        return Strings.format("{baseUrl}/{type}?symbol={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("type", "json").with("symbol", symbol).build();
+    protected String ComposeQuoteUrl(String symbol) {
+
+        return Strings.format("{baseUrl}/{action}/{type}?symbol={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Quote").with("type", "json").with("symbol", symbol).build();
+    }
+
+    protected String ComposeLookupUrl(String symbol) {
+        return Strings.format("{baseUrl/{action}/{type}?input={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Lookup").with("type", "json").with("symbol", symbol).build();
     }
 
     /**
@@ -34,7 +56,7 @@ public class StockPriceMonitor {
      * @param url : url of soap address
      * @return soap string
      */
-    public String GetHttpResponse(String url) {
+    protected String GetHttpResponse(String url) {
         try {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 

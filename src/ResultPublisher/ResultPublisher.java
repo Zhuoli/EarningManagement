@@ -3,6 +3,7 @@ package src.ResultPublisher;
 import src.Utility.Log;
 
 /**
+ * User interactive via Email
  * Created by zhuoli on 6/23/16.
  */
 public class ResultPublisher {
@@ -11,7 +12,6 @@ public class ResultPublisher {
 
     public void Start() {
         try
-
         {
             while (true) {
                 Thread.sleep(3 * 1000);

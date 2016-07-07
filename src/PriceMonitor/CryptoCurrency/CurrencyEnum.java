@@ -1,5 +1,5 @@
 
-package src.PriceMonitor;
+package src.PriceMonitor.CryptoCurrency;
 
 /**
  * Created by zhuoli on 7/1/16.

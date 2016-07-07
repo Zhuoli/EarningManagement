@@ -1,4 +1,4 @@
-package src.PriceMonitor;
+package src.PriceMonitor.stock;
 
 import com.joanzapata.utils.Strings;
 import org.junit.Assert;
@@ -31,7 +31,7 @@ public class StockPriceMonitorTest {
      * Test SOAP API of http://coinmarketcap-nexuist.rhcloud.com
      */
     public void TestGetHttpResponse() {
-        String result = this.stockPriceMonitor.GetHttpResponse(this.stockPriceMonitor.ComposeUrl("AAPL"));
+        String result = this.stockPriceMonitor.GetHttpResponse(this.stockPriceMonitor.ComposeQuoteUrl("AAPL"));
 
         System.out.println("StockQuote Response: " + result);
         Assert.assertNotNull(result);
@@ -39,7 +39,7 @@ public class StockPriceMonitorTest {
 
     @Test
     public void TestComposeUrl() {
-        String url = this.stockPriceMonitor.ComposeUrl("AAPL");
+        String url = this.stockPriceMonitor.ComposeQuoteUrl("AAPL");
         System.out.println(Strings.format("TestComposeUrl url: {url}").with("url", url));
 
         System.out.println(this.stockPriceMonitor.GetHttpResponse(url));

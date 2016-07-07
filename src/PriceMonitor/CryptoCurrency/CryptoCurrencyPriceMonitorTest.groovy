@@ -1,4 +1,4 @@
-package src.PriceMonitor
+package src.PriceMonitor.CryptoCurrency
 
 import org.junit.Assert
 import org.junit.Before
