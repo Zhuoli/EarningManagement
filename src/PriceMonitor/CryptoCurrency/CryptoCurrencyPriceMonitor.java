@@ -1,6 +1,7 @@
-package src.PriceMonitor;
+package src.PriceMonitor.CryptoCurrency;
 
 import org.json.JSONObject;
+import src.PriceMonitor.PriceMonitor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.net.URL;
  * Created by zhuoli on 6/23/16.
  */
 
-public class CryptoCurrencyPriceMonitor {
+public class CryptoCurrencyPriceMonitor extends PriceMonitor {
 
     /*
     {
@@ -33,13 +34,9 @@ public class CryptoCurrencyPriceMonitor {
     // Base URL for SOAP query
     static final String BASE_URL = "http://coinmarketcap-nexuist.rhcloud.com/api";
 
-    // Currency Name
-    static final String BTC = "btc";
-
     public void Start() {
 
-        String soapString = this.GetSOAPString(CryptoCurrencyPriceMonitor.BASE_URL + "/" + BTC);
-        double priceJson = this.GetPriceString(soapString);
+        double priceJson = this.GetPriceForCurrency(CurrencyEnum.LiteCoin);
         System.out.println(priceJson);
     }
 

@@ -1,8 +1,7 @@
 package src;
 
 import src.DataManager.DataManager;
-import src.PriceMonitor.CryptoCurrencyPriceMonitor;
-import src.PriceTrendProphet.TrendProphet;
+import src.PriceMonitor.PriceMonitor;
 import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
 import src.Utility.Log;
@@ -54,20 +53,20 @@ public class Main {
 
         DataManager dataManager = new DataManager();
 
-        // Submit data manager
-        taskExecutor.submit(() -> {
-            dataManager.Start();
-        });
+//        // Submit data manager
+//        taskExecutor.submit(() -> {
+//            dataManager.Start();
+//        });
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
-            new CryptoCurrencyPriceMonitor().Start();
+            new PriceMonitor().Start();
         });
 
-        // Submit Price Prophet task
-        taskExecutor.submit(() -> {
-            new TrendProphet().Start();
-        });
+//        // Submit Price Prophet task
+//        taskExecutor.submit(() -> {
+//            new TrendProphet().Start();
+//        });
 
         // Submit analysis result publisher task
         taskExecutor.submit(() -> {
