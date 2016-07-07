@@ -5,6 +5,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 /**
  * Created by zhuoli on 7/4/16.
  */
@@ -24,6 +26,27 @@ public class StockPriceMonitorTest {
 
         // Apple price should greater than 1 dollar
         Assert.assertTrue(price > 1);
+    }
+
+    @Test
+    public void TestCompanyLookUp() {
+        String[] NFLXNames = this.stockPriceMonitor.CompanyLookUp("NFLX");
+        String[] nonExistNames = this.stockPriceMonitor.CompanyLookUp("aaaa");
+
+        Assert.assertEquals(NFLXNames.length, 1);
+        Assert.assertEquals(NFLXNames[0], "Netflix Inc");
+
+        Assert.assertEquals(nonExistNames.length, 0);
+    }
+
+    @Test
+    public void TestGetCompanyName() {
+        String soapString = "[{\"Symbol\":\"AAPL\",\"Name\":\"Apple Inc\",\"Exchange\":\"NASDAQ\"},{\"Symbol\":\"AVSPY\",\"Name\":\"AAPL ALPHA INDEX\",\"Exchange\":\"NASDAQ\"},{\"Symbol\":\"AIX\",\"Name\":\"NAS OMX Alpha   AAPL vs. SPY  Settle\",\"Exchange\":\"NASDAQ\"}]";
+        String[] companyNames = this.stockPriceMonitor.GetCompanyName(soapString, "AAPL");
+        System.out.println("Company name: " + Arrays.toString(companyNames));
+
+        Assert.assertEquals(companyNames.length, 1);
+        Assert.assertEquals(companyNames[0], "Apple Inc");
     }
 
     @Test
