@@ -1,6 +1,7 @@
 package src.PriceMonitor.stock;
 
 import com.joanzapata.utils.Strings;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import src.PriceMonitor.PriceMonitor;
 
@@ -9,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by zhuoli on 7/4/16.
@@ -36,9 +39,10 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param symbol
      * @return company name
      */
-    public String CompanyLookUp(String symbol) {
+    public String[] CompanyLookUp(String symbol) {
         String url = this.ComposeLookupUrl(symbol);
-        return url;
+        String soapString = this.GetHttpResponse(url);
+        return this.GetCompanyName(soapString, symbol);
     }
 
     protected String ComposeQuoteUrl(String symbol) {
@@ -47,7 +51,7 @@ public class StockPriceMonitor extends PriceMonitor {
     }
 
     protected String ComposeLookupUrl(String symbol) {
-        return Strings.format("{baseUrl/{action}/{type}?input={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Lookup").with("type", "json").with("symbol", symbol).build();
+        return Strings.format("{baseUrl}/{action}/{type}?input={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Lookup").with("type", "json").with("symbol", symbol).build();
     }
 
     /**
@@ -84,7 +88,7 @@ public class StockPriceMonitor extends PriceMonitor {
     /**
      * Parse Markitondemand JSON Price.
      * E.g:
-     * hellworld({"Status":"SUCCESS","Name":"Apple Inc","Symbol":"AAPL","LastPrice":95.895,"Change":0.295000000000002,"ChangePercent":0.308577405857742,"Timestamp":"Fri Jul 1 15:59:00 UTC-04:00 2016","MSDate":42552.6659722222,"MarketCap":525257670375,"Volume":2562784,"ChangeYTD":105.26,"ChangePercentYTD":-8.89701691050732,"High":96.46,"Low":95.33,"Open":95.48})
+     * {"Status":"SUCCESS","Name":"Apple Inc","Symbol":"AAPL","LastPrice":95.895,"Change":0.295000000000002,"ChangePercent":0.308577405857742,"Timestamp":"Fri Jul 1 15:59:00 UTC-04:00 2016","MSDate":42552.6659722222,"MarketCap":525257670375,"Volume":2562784,"ChangeYTD":105.26,"ChangePercentYTD":-8.89701691050732,"High":96.46,"Low":95.33,"Open":95.48}
      *
      * @param JSON String
      * @return Price.
@@ -92,5 +96,26 @@ public class StockPriceMonitor extends PriceMonitor {
     protected double ParseMarkitondemandPrice(String soapString) {
         JSONObject jsonObj = new JSONObject(soapString);
         return jsonObj.getDouble("LastPrice");
+    }
+
+    /**
+     * Parse Markitondemand Company Lookup JSON.
+     * E.g:
+     * [{"Symbol":"NFLX","Name":"Netflix Inc","Exchange":"NASDAQ"}]
+     *
+     * @param soapString
+     * @return
+     */
+    protected String[] GetCompanyName(String soapString, String symbol) {
+        JSONArray jsonArray = new JSONArray(soapString);
+        List<String> nameList = new LinkedList<>();
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObj = jsonArray.getJSONObject(i);
+
+            // Add to result if symbols match
+            if (jsonObj.getString("Symbol").equals(symbol))
+                nameList.add(jsonObj.getString("Name"));
+        }
+        return nameList.toArray(new String[nameList.size()]);
     }
 }
