@@ -1,8 +1,10 @@
 package src;
 
+import com.joanzapata.utils.Strings;
 import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
 import src.ResultPublisher.EmailManager.EmailManager;
+import src.ResultPublisher.EmailManager.MonitorEmail;
 import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
 import src.Utility.Log;
@@ -25,7 +27,11 @@ public class Main {
 //        }
 
         try {
-            new EmailManager().Receive("inbox");
+            EmailManager emailManager = new EmailManager();
+            MonitorEmail[] newReceivedEmails = emailManager.Receive("inbox", "robotonyszu@gmail.com");
+            for (MonitorEmail email : newReceivedEmails)
+                System.out.println(Strings.format("Subject: {subject};\tText: {text}").with("subject", email.Subject).with("text", email.Content).build());
+            emailManager.Send("robotonyszu@gmail.com", "hi this is subject", "I received " + newReceivedEmails.length + " unread emails.");
         } catch (Exception e) {
             e.printStackTrace();
         }

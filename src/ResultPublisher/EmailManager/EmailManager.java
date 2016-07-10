@@ -6,7 +6,8 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.FlagTerm;
-import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -15,25 +16,29 @@ import java.util.Scanner;
  */
 public class EmailManager {
 
-    Session session = null;
-    String username = "";
+    Session sendSession = null;
+    String username = "digitcurrencymonitor@gmail.com";
     String password = "";
     boolean isAuthenticated = false;
     Store receiveStore = null;
 
-    String recipient = "robotonyszu@gmail.com";
-
     public EmailManager() {
     }
 
+    /**
+     * Authenticate Gmail credentail.
+     *
+     * @throws NoSuchProviderException
+     */
     public void Authenticate() throws NoSuchProviderException {
 
-        Session session = Session.getDefaultInstance(new Properties());
+        // Verify credential
+        Session session = Session.getInstance(new Properties());
         this.receiveStore = session.getStore("imaps");
         Scanner scan = new Scanner(System.in);
-        this.username = "digitcurrencymonitor@gmail.com";
         while (!this.isAuthenticated) {
 
+            // Loop until authentication succeed or exception raised
             try {
                 System.out.println("Passord:");
                 this.password = String.valueOf(scan.nextLine());
@@ -48,10 +53,8 @@ public class EmailManager {
                 }
             }
         }
-    }
 
-    public boolean Send() {
-
+        // Initialize Send Session
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.socketFactory.port", "465");
@@ -60,26 +63,40 @@ public class EmailManager {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.port", "465");
 
-        this.session = Session.getDefaultInstance(props,
+        // Get session instance
+        this.sendSession = Session.getInstance(props,
                 new javax.mail.Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(username, password);
                     }
                 });
+    }
+
+    /**
+     * Send email.
+     *
+     * @return
+     * @throws NoSuchProviderException
+     */
+    public boolean Send(String recipient, String subject, String content) throws NoSuchProviderException {
+
+        if (!this.isAuthenticated)
+            this.Authenticate();
 
         try {
 
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("from@no-spam.com"));
+            Message message = new MimeMessage(sendSession);
+            message.setFrom(new InternetAddress(this.username));
             message.setRecipients(Message.RecipientType.TO,
-                    InternetAddress.parse("to@no-spam.com"));
-            message.setSubject("Testing Subject");
-            message.setText("Dear Mail Crawler," +
-                    "\n\n No spam to my email, please!");
+                    InternetAddress.parse(recipient));
+            message.setSubject(subject);
+            message.setText(content);
 
+            // Send
             Transport.send(message);
 
-            System.out.println("Done");
+            // Interaction
+            System.out.println(Strings.format("Email sent out to: {recipient}").with("recipient", recipient).build());
 
         } catch (MessagingException e) {
             throw new RuntimeException(e);
@@ -87,7 +104,10 @@ public class EmailManager {
         return true;
     }
 
-    public void Receive(String folderName) throws MessagingException {
+
+    public MonitorEmail[] Receive(String folderName, String from) throws MessagingException {
+        List<MonitorEmail> emailList = new LinkedList<>();
+
         if (this.receiveStore == null)
             this.Authenticate();
 
@@ -102,28 +122,27 @@ public class EmailManager {
         for (Message msg : messages) {
             try {
                 Address[] addresses = msg.getFrom();
-                if (!addresses[0].toString().toLowerCase().contains(this.recipient)) {
+                if (!addresses[0].toString().toLowerCase().contains(from)) {
                     System.out.println(addresses[0].toString());
                     continue;
                 }
-
-                System.out.println(
-                        Strings.format("Email in folder '{folderName}'; from: '{from}';\tSubject: '{subject}'").with("folderName", folderName).with("from", Arrays.toString(addresses)).with("subject", msg.getSubject()).build());
-
+                String content = "";
                 Multipart multipart = (Multipart) msg.getContent();
                 for (int i = 0; i < multipart.getCount(); i++) {
                     BodyPart part = multipart.getBodyPart(i);
-
                     if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html")) {
-                        System.out.println(Strings.format("\tBody part {idx}: '{text}'").with("idx", i).with("text", part.getContent()).build());
-                    } else
-                        System.out.println(Strings.format("\tBody part content format {format}").with("format", part.getContentType()).build());
+                        content += part.getContent() + "\n\n";
+                    }
                 }
+
+                MonitorEmail email = new MonitorEmail(folderName, msg.getSubject(), this.username, addresses[0].toString(), content);
+                emailList.add(email);
             } catch (Exception exc) {
                 System.out.println("\tERROR:" + exc.getMessage());
             }
         }
 
         this.receiveStore.close();
+        return emailList.toArray(new MonitorEmail[0]);
     }
 }
