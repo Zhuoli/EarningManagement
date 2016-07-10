@@ -5,6 +5,8 @@ import com.joanzapata.utils.Strings;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.search.FlagTerm;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -18,6 +20,8 @@ public class EmailManager {
     String password = "";
     boolean isAuthenticated = false;
     Store receiveStore = null;
+
+    String recipient = "robotonyszu@gmail.com";
 
     public EmailManager() {
     }
@@ -93,14 +97,30 @@ public class EmailManager {
         infolder.open(Folder.READ_ONLY);
 
          /*  Get the messages which is unread in the Inbox*/
-        Message messages[] = infolder.getMessages(); //infolder.search(new FlagTerm(new Flags(Flag.SEEN), false));
+        Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
 
         for (Message msg : messages) {
             try {
+                Address[] addresses = msg.getFrom();
+                if (!addresses[0].toString().toLowerCase().contains(this.recipient)) {
+                    System.out.println(addresses[0].toString());
+                    continue;
+                }
+
                 System.out.println(
-                        Strings.format("Email in folder '{folderName}';\tSubject: '{subject}'; Text:{Text}").with("folderName", folderName).with("subject", msg.getSubject()).with("Text", msg.getContent().toString()).build());
+                        Strings.format("Email in folder '{folderName}'; from: '{from}';\tSubject: '{subject}'").with("folderName", folderName).with("from", Arrays.toString(addresses)).with("subject", msg.getSubject()).build());
+
+                Multipart multipart = (Multipart) msg.getContent();
+                for (int i = 0; i < multipart.getCount(); i++) {
+                    BodyPart part = multipart.getBodyPart(i);
+
+                    if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html")) {
+                        System.out.println(Strings.format("\tBody part {idx}: '{text}'").with("idx", i).with("text", part.getContent()).build());
+                    } else
+                        System.out.println(Strings.format("\tBody part content format {format}").with("format", part.getContentType()).build());
+                }
             } catch (Exception exc) {
-                System.out.println(exc.getMessage());
+                System.out.println("\tERROR:" + exc.getMessage());
             }
         }
 
