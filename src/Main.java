@@ -2,6 +2,7 @@ package src;
 
 import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
+import src.ResultPublisher.EmailManager.EmailManager;
 import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
 import src.Utility.Log;
@@ -17,10 +18,16 @@ public class Main {
 
     public static void main(String[] args) {
 
+//        try {
+//            new Main().start(args);
+//        } catch (Exception exc) {
+//            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
+//        }
+
         try {
-            new Main().start(args);
-        } catch (Exception exc) {
-            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
+            new EmailManager().Receive("inbox");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
