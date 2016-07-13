@@ -1,6 +1,7 @@
 package src.DataManager;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import src.Utility.Constant;
 import src.Utility.Log;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 
 /**
  * Created by zhuoli on 6/25/16.
@@ -30,7 +32,7 @@ public class DataManager {
         if (!dir.exists() || !dir.isDirectory()) {
             dir.mkdir();
         }
-        this.path = Paths.get(Constant.DATA_ROOT, "transactionRecords.xml").toAbsolutePath();
+        this.path = Paths.get(Constant.DATA_ROOT, "transactionRecords.csv").toAbsolutePath();
         System.out.println("The data file stored at : " + dir.getAbsolutePath());
 
     }
@@ -48,6 +50,8 @@ public class DataManager {
 
     /**
      * Initialize csv file if not exist.
+     * Header format:
+     * Stock Symbol | Bought Price | Bought Number
      */
     public void InitializeStockCSVFile() {
 
@@ -61,14 +65,41 @@ public class DataManager {
         }
     }
 
-    public void ReadStockCSVFile() throws IOException {
+    /**
+     * Read stocks from CSV file.
+     *
+     * @return stock item array.
+     * @throws IOException
+     */
+    public StockItem[] ReadStockCSVFile() throws IOException {
         this.InitializeStockCSVFile();
 
+        LinkedList<StockItem> stockItems = new LinkedList<>();
         FileReader in = new FileReader(this.path.toFile());
-        Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(in);
+        CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(in);
         for (CSVRecord record : records) {
-            String lastName = record.get("Last Name");
-            String firstName = record.get("First Name");
+            String symbol = record.get("Symbol");
+            double price = Double.parseDouble(record.get("Price"));
+            int number = Integer.parseInt(record.get("Number"));
+            stockItems.add(new StockItem(symbol, price, number));
         }
+        in.close();
+        return stockItems.toArray(new StockItem[0]);
+    }
+
+    /**
+     * Get CSV headers.
+     *
+     * @return Header array.
+     * @throws IOException
+     */
+    public String[] Getheaders() throws IOException {
+        this.InitializeStockCSVFile();
+
+        LinkedList<String> headers = new LinkedList<>();
+        FileReader in = new FileReader(this.path.toFile());
+        CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(in);
+        in.close();
+        return records.getHeaderMap().keySet().toArray(new String[0]);
     }
 }
