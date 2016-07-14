@@ -66,10 +66,10 @@ public class Main {
 
         DataManager dataManager = new DataManager();
 
-//        // Submit data manager
-//        taskExecutor.submit(() -> {
-//            dataManager.Start();
-//        });
+        // Submit data manager
+        taskExecutor.submit(() -> {
+            dataManager.Start();
+        });
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
