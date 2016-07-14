@@ -23,32 +23,29 @@ public class DataManager {
 
     Path path = null;
 
+    long lastModifiedDateTime = 0;
+
     StockItem[] stockItems;
 
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public DataManager() {
-
-        File dir = new File(Constant.DATA_ROOT);
-
-        // Create Data directory if not exist
-        if (!dir.exists() || !dir.isDirectory()) {
-            dir.mkdir();
-        }
-        this.path = Paths.get(Constant.DATA_ROOT, "transactionRecords.csv").toAbsolutePath();
-        System.out.println("The data file stored at : " + dir.getAbsolutePath());
-
+    public DataManager() throws IOException {
+        this.InitializeStockCSVFile();
     }
 
     // Start thread
     public void Start() {
         try {
-            // Initialize stock items array
-            this.stockItems = this.ReadStockCSVFile();
             while (true) {
                 Thread.sleep(3 * 1000);
                 System.out.println("Hello DataManager is running: " + DataManager.count++);
+
+                // Update Stock Items if file size has changed
+                if (this.lastModifiedDateTime == 0 || this.path.toFile().lastModified() != this.lastModifiedDateTime) {
+                    this.lastModifiedDateTime = this.path.toFile().lastModified();
+                    this.stockItems = this.ReadStockCSVFile();
+                }
             }
         } catch (Exception exc) {
             Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
@@ -60,16 +57,26 @@ public class DataManager {
      * Header format:
      * Stock Symbol | Bought Price | Bought Number
      */
-    public void InitializeStockCSVFile() {
+    public void InitializeStockCSVFile() throws IOException {
+
+        this.path = Paths.get(Constant.DATA_ROOT, "transactionRecords.csv").toAbsolutePath();
+
+        File dir = new File(Constant.DATA_ROOT);
+
+        // Create Data directory if not exist
+        if (!dir.exists() || !dir.isDirectory()) {
+            dir.mkdir();
+        }
 
         // Create file if not exist
         if (!Files.exists(this.path)) {
-            try {
-                Files.createFile(this.path);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            Files.createFile(this.path);
         }
+
+        // Set the last modified date of the csv file
+        this.lastModifiedDateTime = this.path.toFile().lastModified();
+
+        System.out.println("The data file stored at : " + dir.getAbsolutePath());
     }
 
     /**
