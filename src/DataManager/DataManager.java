@@ -23,7 +23,11 @@ public class DataManager {
 
     Path path = null;
 
+    StockItem[] stockItems;
 
+    /**
+     * Constructor, create DATA_ROOT directory
+     */
     public DataManager() {
 
         File dir = new File(Constant.DATA_ROOT);
@@ -37,13 +41,16 @@ public class DataManager {
 
     }
 
+    // Start thread
     public void Start() {
         try {
+            // Initialize stock items array
+            this.stockItems = this.ReadStockCSVFile();
             while (true) {
                 Thread.sleep(3 * 1000);
                 System.out.println("Hello DataManager is running: " + DataManager.count++);
             }
-        } catch (InterruptedException exc) {
+        } catch (Exception exc) {
             Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
         }
     }
