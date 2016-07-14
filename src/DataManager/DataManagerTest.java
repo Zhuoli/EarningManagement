@@ -17,12 +17,12 @@ public class DataManagerTest {
     private DataManager dataManager;
 
     @Before
-    public void TestSetUp() {
+    public void TestSetUp() throws IOException {
         this.dataManager = new DataManager();
     }
 
     @Test
-    public void testInitializeStockCSVFile() {
+    public void testInitializeStockCSVFile() throws IOException {
         this.dataManager.InitializeStockCSVFile();
 
         Assert.assertTrue(Files.exists(this.dataManager.path));
