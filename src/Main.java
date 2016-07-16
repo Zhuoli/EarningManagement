@@ -9,6 +9,7 @@ import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
 import src.Utility.Log;
 
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,12 @@ import java.util.concurrent.Executors;
  * Created by zhuoli on 6/23/16.
  */
 public class Main {
+
+    /**
+     * Key: Stock symbol
+     * Value: Stock price
+     */
+    public static HashMap<String, Double> stockPriceDictionary = new HashMap<>();
 
     public static void main(String[] args) {
 
