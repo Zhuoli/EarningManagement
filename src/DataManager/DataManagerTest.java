@@ -52,4 +52,16 @@ public class DataManagerTest {
         Assert.assertNotNull(stockItems);
         Assert.assertTrue(stockItems.length > 0);
     }
+
+
+    @Test
+    /**
+     * Test Read GetStockSymbolsInHand.
+     */
+    public void testGetStockSymbolsInHand() {
+        String[] symbols = this.dataManager.GetStockSymbolsInHand();
+
+        Assert.assertNotNull(symbols);
+        Assert.assertTrue(symbols.length > 0);
+    }
 }

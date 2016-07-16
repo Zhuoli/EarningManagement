@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 /**
@@ -52,6 +53,10 @@ public class DataManager {
         }
     }
 
+    public String[] GetStockSymbolsInHand() {
+        return Arrays.stream(stockItems).map(p -> p.Symbol).distinct().toArray(String[]::new);
+    }
+
     /**
      * Initialize csv file if not exist.
      * Header format:
@@ -75,6 +80,7 @@ public class DataManager {
 
         // Set the last modified date of the csv file
         this.lastModifiedDateTime = this.path.toFile().lastModified();
+        this.stockItems = this.ReadStockCSVFile();
 
         System.out.println("The data file stored at : " + dir.getAbsolutePath());
     }
@@ -86,7 +92,6 @@ public class DataManager {
      * @throws IOException
      */
     public StockItem[] ReadStockCSVFile() throws IOException {
-        this.InitializeStockCSVFile();
 
         LinkedList<StockItem> stockItems = new LinkedList<>();
         FileReader in = new FileReader(this.path.toFile());
@@ -110,7 +115,6 @@ public class DataManager {
     public String[] Getheaders() throws IOException {
         this.InitializeStockCSVFile();
 
-        LinkedList<String> headers = new LinkedList<>();
         FileReader in = new FileReader(this.path.toFile());
         CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(in);
         in.close();
