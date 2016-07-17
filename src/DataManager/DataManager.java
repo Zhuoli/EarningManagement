@@ -20,19 +20,23 @@ import java.util.LinkedList;
  */
 public class DataManager {
 
-    static int count = 0;
+    private static int count = 0;
 
-    Path path = null;
+    private Path path = null;
 
-    long lastModifiedDateTime = 0;
+    private long lastModifiedDateTime = 0;
 
-    StockItem[] stockItems;
+    private DataItem[] stockItems;
 
     /**
      * Constructor, create DATA_ROOT directory
      */
     public DataManager() throws IOException {
         this.InitializeStockCSVFile();
+    }
+
+    public DataItem[] GetDataItems() {
+        return this.stockItems;
     }
 
     // Start thread
@@ -91,19 +95,19 @@ public class DataManager {
      * @return stock item array.
      * @throws IOException
      */
-    public StockItem[] ReadStockCSVFile() throws IOException {
+    public DataItem[] ReadStockCSVFile() throws IOException {
 
-        LinkedList<StockItem> stockItems = new LinkedList<>();
+        LinkedList<DataItem> stockItems = new LinkedList<>();
         FileReader in = new FileReader(this.path.toFile());
         CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(in);
         for (CSVRecord record : records) {
             String symbol = record.get("Symbol");
             double price = Double.parseDouble(record.get("Price"));
             int number = Integer.parseInt(record.get("Number"));
-            stockItems.add(new StockItem(symbol, price, number));
+            stockItems.add(new DataItem(symbol, price, number));
         }
         in.close();
-        return stockItems.toArray(new StockItem[0]);
+        return stockItems.toArray(new DataItem[0]);
     }
 
     /**

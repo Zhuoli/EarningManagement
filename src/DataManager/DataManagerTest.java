@@ -47,7 +47,7 @@ public class DataManagerTest {
      * Test Read StockItems.
      */
     public void testReadStockCSVFile() throws IOException {
-        StockItem[] stockItems = this.dataManager.ReadStockCSVFile();
+        DataItem[] stockItems = this.dataManager.ReadStockCSVFile();
 
         Assert.assertNotNull(stockItems);
         Assert.assertTrue(stockItems.length > 0);
