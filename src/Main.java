@@ -1,8 +1,10 @@
 package src;
 
 import com.joanzapata.utils.Strings;
+import src.DataManager.DataItem;
 import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
+import src.PriceMonitor.stock.StockItem;
 import src.ResultPublisher.EmailManager.EmailManager;
 import src.ResultPublisher.EmailManager.MonitorEmail;
 import src.ResultPublisher.ResultPublisher;
@@ -80,7 +82,11 @@ public class Main {
 
         // Submit Price monitor task
         taskExecutor.submit(() -> {
-            new PriceMonitor().Start();
+            try {
+                new PriceMonitor().Start();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         });
 
 //        // Submit Price Prophet task
@@ -93,7 +99,11 @@ public class Main {
             new ResultPublisher().Start();
         });
 
-        System.out.println("Main thread is waiting for child threads...");
-        taskExecutor.wait();
+        while (true) {
+            String[] symbols = dataManager.GetStockSymbolsInHand();
+            PriceMonitor.RegisterStockSymboles(symbols);
+            DataItem[] dataItems = dataManager.GetDataItems();
+            StockItem[] stockItems = PriceMonitor.GetStocks();
+        }
     }
 }
