@@ -1,16 +1,13 @@
 package src;
 
-import com.joanzapata.utils.Strings;
 import src.DataManager.DataItem;
 import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
 import src.PriceMonitor.stock.StockItem;
-import src.ResultPublisher.EmailManager.EmailManager;
-import src.ResultPublisher.EmailManager.MonitorEmail;
-import src.ResultPublisher.ResultPublisher;
 import src.Utility.Email;
 import src.Utility.Log;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -29,21 +26,21 @@ public class Main {
 
     public static void main(String[] args) {
 
-//        try {
-//            new Main().start(args);
-//        } catch (Exception exc) {
-//            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
-//        }
-
         try {
-            EmailManager emailManager = new EmailManager();
-            MonitorEmail[] newReceivedEmails = emailManager.Receive("inbox", "robotonyszu@gmail.com");
-            for (MonitorEmail email : newReceivedEmails)
-                System.out.println(Strings.format("Subject: {subject};\tText: {text}").with("subject", email.Subject).with("text", email.Content).build());
-            emailManager.Send("robotonyszu@gmail.com", "hi this is subject", "I received " + newReceivedEmails.length + " unread emails.");
-        } catch (Exception e) {
-            e.printStackTrace();
+            new Main().start(args);
+        } catch (Exception exc) {
+            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
         }
+
+//        try {
+//            EmailManager emailManager = new EmailManager();
+//            MonitorEmail[] newReceivedEmails = emailManager.Receive("inbox", "robotonyszu@gmail.com");
+//            for (MonitorEmail email : newReceivedEmails)
+//                System.out.println(Strings.format("Subject: {subject};\tText: {text}").with("subject", email.Subject).with("text", email.Content).build());
+//            emailManager.Send("robotonyszu@gmail.com", "hi this is subject", "I received " + newReceivedEmails.length + " unread emails.");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
 
@@ -95,15 +92,32 @@ public class Main {
 //        });
 
         // Submit analysis result publisher task
-        taskExecutor.submit(() -> {
-            new ResultPublisher().Start();
-        });
+//        taskExecutor.submit(() -> {
+//            new ResultPublisher().Start();
+//        });
 
+        HashMap<String, StockItem> stockPriceMap = new HashMap<>();
         while (true) {
             String[] symbols = dataManager.GetStockSymbolsInHand();
             PriceMonitor.RegisterStockSymboles(symbols);
             DataItem[] dataItems = dataManager.GetDataItems();
             StockItem[] stockItems = PriceMonitor.GetStocks();
+
+            Arrays.stream(stockItems).forEach(p -> stockPriceMap.put(p.Symbol, p));
+
+            double baseValue = Arrays.stream(dataItems).map(item -> item.Price * item.Number).reduce((a, b) -> a + b).get();
+            double currentValue = 0;
+            for (DataItem item : dataItems) {
+                if (stockPriceMap.containsKey(item.Symbol)) {
+                    StockItem stockItem = stockPriceMap.get(item.Symbol);
+                    currentValue += stockItem.Price * item.Number;
+                } else {
+                    System.out.println("Symbole price not found : " + item.Symbol);
+                }
+            }
+            System.out.println("Buying price: " + baseValue);
+            System.out.println("Current value: " + currentValue);
+            Thread.sleep(10 * 1000);
         }
     }
 }
