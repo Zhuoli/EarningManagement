@@ -22,7 +22,7 @@ public class DataManager {
 
     private static int count = 0;
 
-    private Path path = null;
+    protected Path path = null;
 
     private long lastModifiedDateTime = 0;
 
