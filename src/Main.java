@@ -4,12 +4,10 @@ import src.DataManager.DataItem;
 import src.DataManager.DataManager;
 import src.PriceMonitor.PriceMonitor;
 import src.PriceMonitor.stock.StockItem;
-import src.Utility.Email;
 import src.Utility.Log;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,13 +15,6 @@ import java.util.concurrent.Executors;
  * Created by zhuoli on 6/23/16.
  */
 public class Main {
-
-    /**
-     * Key: Stock symbol
-     * Value: Stock price
-     */
-    public static HashMap<String, Double> stockPriceDictionary = new HashMap<>();
-
     public static void main(String[] args) {
 
         try {
@@ -31,16 +22,6 @@ public class Main {
         } catch (Exception exc) {
             Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
         }
-
-//        try {
-//            EmailManager emailManager = new EmailManager();
-//            MonitorEmail[] newReceivedEmails = emailManager.Receive("inbox", "robotonyszu@gmail.com");
-//            for (MonitorEmail email : newReceivedEmails)
-//                System.out.println(Strings.format("Subject: {subject};\tText: {text}").with("subject", email.Subject).with("text", email.Content).build());
-//            emailManager.Send("robotonyszu@gmail.com", "hi this is subject", "I received " + newReceivedEmails.length + " unread emails.");
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
     }
 
 
@@ -49,19 +30,19 @@ public class Main {
 
         Log.PrintAndLog("CurrencyProphet been launched. all rights reserved");
 
-        // Initialize email recipient
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Input your recipient email:");
-        String emailAddress = scanner.nextLine();
-        System.out.println("Input your recipient password:");
-        String pw = scanner.nextLine();
-
-        Email user = Email.GetInstance(emailAddress, pw);
-        try {
-            user.Authenticate();
-        } catch (Exception exc) {
-            System.out.println("Error on authenticating email recipient" + exc.getMessage());
-        }
+//        // Initialize email recipient
+//        Scanner scanner = new Scanner(System.in);
+//        System.out.println("Input your recipient email:");
+//        String emailAddress = scanner.nextLine();
+//        System.out.println("Input your recipient password:");
+//        String pw = scanner.nextLine();
+//
+//        Email user = Email.GetInstance(emailAddress, pw);
+//        try {
+//            user.Authenticate();
+//        } catch (Exception exc) {
+//            System.out.println("Error on authenticating email recipient" + exc.getMessage());
+//        }
 
         Log.PrintAndLog("Email authenticate succeed");
         Log.PrintAndLog("Monitor started...");
