@@ -44,7 +44,7 @@ public class DataManager {
         try {
             while (true) {
                 Thread.sleep(3 * 1000);
-                System.out.println("Hello DataManager is running: " + DataManager.count++);
+                // System.out.println("Hello DataManager is running: " + DataManager.count++);
 
                 // Update Stock Items if file size has changed
                 if (this.lastModifiedDateTime == 0 || this.path.toFile().lastModified() != this.lastModifiedDateTime) {

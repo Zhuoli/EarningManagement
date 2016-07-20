@@ -30,6 +30,8 @@ public class PriceMonitor {
     // Register
     public static void RegisterStockSymboles(String... symbols) {
         // Lock the map for multi thread safe
+
+        System.out.println("RegisterStockSymboles acquired lock: stockPriceMap");
         synchronized (PriceMonitor.stockPriceMap) {
             for (String symbol : symbols) {
                 if (PriceMonitor.stockPriceMap.containsKey(symbol))
@@ -37,6 +39,7 @@ public class PriceMonitor {
                 PriceMonitor.stockPriceMap.put(symbol, new StockItem(symbol));
             }
         }
+        System.out.println("RegisterStockSymboles released lock: stockPriceMap");
     }
 
     public void Start() throws InterruptedException {
@@ -45,19 +48,29 @@ public class PriceMonitor {
 
         boolean shouldContinue = true;
         while (shouldContinue) {
-
             // Lock the map for multi thread safe
+            System.out.println("PriceMonitor acquired lock: stockPriceMap");
             synchronized (PriceMonitor.stockPriceMap) {
-                for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
-                    double stockPrice = stockMonitor.GetPrice(symbol);
-                    StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
-                    stockItem.Price = stockPrice;
-                    stockItem.LastUpdateTime = LocalDateTime.now();
-                }
+                try {
+                    for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
+                        double stockPrice = stockMonitor.GetPrice(symbol);
+                        StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
+                        stockItem.Price = stockPrice;
+                        stockItem.LastUpdateTime = LocalDateTime.now();
 
-                // Sleep a whole
-                Thread.sleep(PriceMonitor.SCAN_PERIOD);
+                        // Sleep a while to avoid access limit
+                        Thread.sleep(500);
+                    }
+                } catch (Exception exc) {
+                    System.out.println(exc);
+                }
             }
+            System.out.println("PriceMonitor released lock: stockPriceMap");
+
+            System.out.println("PriceMonitor sleep...");
+
+            // Sleep a whole
+            Thread.sleep(PriceMonitor.SCAN_PERIOD);
         }
     }
 }
