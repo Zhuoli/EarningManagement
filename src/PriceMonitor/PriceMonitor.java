@@ -53,7 +53,9 @@ public class PriceMonitor {
             synchronized (PriceMonitor.stockPriceMap) {
                 try {
                     for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
+
                         double stockPrice = stockMonitor.GetPrice(symbol);
+                        System.out.println(symbol + " price been updated " + stockPrice);
                         StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
                         stockItem.Price = stockPrice;
                         stockItem.LastUpdateTime = LocalDateTime.now();

@@ -3,6 +3,7 @@ package src.Utility;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * Created by zhuoli on 6/23/16.
@@ -29,7 +30,8 @@ public class Log {
             Log.CreateLogFileIfNotExist();
             //the true will append the new data
             try (FileWriter fw = new FileWriter(Log.LogFile, true)) {
-                fw.write(type + " : " + message + "\n"); //appends the string to the file
+                Date d = new Date();
+                fw.write(d.toString() + " : " + type + " : " + message + "\n"); //appends the string to the file
             }
 
         } catch (IOException e) {
