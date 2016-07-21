@@ -10,7 +10,7 @@ public class StockItem {
     public String Symbol;
     public String CompanyName;
     public LocalDateTime LastUpdateTime;
-    public Double Price;
+    public double Price;
 
     public StockItem() {
 

@@ -19,9 +19,12 @@ public class Main {
 
         try {
             new Main().start(args);
+            return;
         } catch (Exception exc) {
-            Log.PrintAndLog("Unexpected exception: " + exc.getMessage() + "\n" + exc.getStackTrace());
+            Log.PrintAndLog("Unexpected exception: " + exc.toString());
+            exc.printStackTrace();
         }
+        System.exit(1);
     }
 
 
