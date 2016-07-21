@@ -21,7 +21,7 @@ public class Main {
             new Main().start(args);
             return;
         } catch (Exception exc) {
-            Log.PrintAndLog("Unexpected exception: " + exc.toString());
+            Log.Error("Unexpected exception: " + exc.toString());
             exc.printStackTrace();
         }
         System.exit(1);

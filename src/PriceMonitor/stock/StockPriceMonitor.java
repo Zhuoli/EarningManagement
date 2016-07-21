@@ -6,7 +6,6 @@ import org.json.JSONObject;
 import src.PriceMonitor.PriceMonitor;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -27,10 +26,17 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param symbol
      * @return price
      */
-    public double GetPrice(String symbol) {
+    public double GetPrice(String symbol) throws Exception {
         String url = this.ComposeQuoteUrl(symbol);
         String response = this.GetHttpResponse(url);
-        return this.ParseMarkitondemandPrice(response);
+
+        try {
+
+            JSONObject jsonObj = new JSONObject(response);
+            return jsonObj.getDouble("LastPrice");
+        } catch (Exception exc) {
+            throw new Exception("Error on parsing price of url + " + url + " for soap string " + response);
+        }
     }
 
     /**
@@ -39,7 +45,7 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param symbol
      * @return company name
      */
-    public String[] CompanyLookUp(String symbol) {
+    public String[] CompanyLookUp(String symbol) throws Exception {
         String url = this.ComposeLookupUrl(symbol);
         String soapString = this.GetHttpResponse(url);
         return this.GetCompanyName(soapString, symbol);
@@ -60,42 +66,24 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param url : url of soap address
      * @return soap string
      */
-    protected String GetHttpResponse(String url) {
-        try {
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+    protected String GetHttpResponse(String url) throws Exception {
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 
-            connection.setRequestMethod("GET");
-            connection.connect();
-            int status = connection.getResponseCode();
+        connection.setRequestMethod("GET");
+        connection.connect();
+        int status = connection.getResponseCode();
 
-            if (status != 200) {
-            }
+        // Raise exception if status not 200
+        if (status != 200)
+            throw new Exception("URL status not 200 for status: " + status + " url: " + url);
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuffer response = new StringBuffer();
-            String inputLine;
-            while ((inputLine = reader.readLine()) != null) {
-                response.append(inputLine);
-            }
-            return response.toString();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        StringBuffer response = new StringBuffer();
+        String inputLine;
+        while ((inputLine = reader.readLine()) != null) {
+            response.append(inputLine);
         }
-        return "";
-    }
-
-    /**
-     * Parse Markitondemand JSON Price.
-     * E.g:
-     * {"Status":"SUCCESS","Name":"Apple Inc","Symbol":"AAPL","LastPrice":95.895,"Change":0.295000000000002,"ChangePercent":0.308577405857742,"Timestamp":"Fri Jul 1 15:59:00 UTC-04:00 2016","MSDate":42552.6659722222,"MarketCap":525257670375,"Volume":2562784,"ChangeYTD":105.26,"ChangePercentYTD":-8.89701691050732,"High":96.46,"Low":95.33,"Open":95.48}
-     *
-     * @param JSON String
-     * @return Price.
-     */
-    protected double ParseMarkitondemandPrice(String soapString) {
-        JSONObject jsonObj = new JSONObject(soapString);
-        return jsonObj.getDouble("LastPrice");
+        return response.toString();
     }
 
     /**
@@ -106,16 +94,21 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param soapString
      * @return
      */
-    protected String[] GetCompanyName(String soapString, String symbol) {
+    protected String[] GetCompanyName(String soapString, String symbol) throws Exception {
         JSONArray jsonArray = new JSONArray(soapString);
         List<String> nameList = new LinkedList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObj = jsonArray.getJSONObject(i);
+        try {
 
-            // Add to result if symbols match
-            if (jsonObj.getString("Symbol").equals(symbol))
-                nameList.add(jsonObj.getString("Name"));
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObj = jsonArray.getJSONObject(i);
+
+                // Add to result if symbols match
+                if (jsonObj.getString("Symbol").equals(symbol))
+                    nameList.add(jsonObj.getString("Name"));
+            }
+            return nameList.toArray(new String[nameList.size()]);
+        } catch (Exception exc) {
+            throw new Exception("Error on parsing company name from soap string: " + soapString);
         }
-        return nameList.toArray(new String[nameList.size()]);
     }
 }
