@@ -18,6 +18,7 @@ import java.util.List;
 public class StockPriceMonitor extends PriceMonitor {
 
     // Referrence: http://dev.markitondemand.com/MODApis/#stockquote
+    // Alternative url: http://finance.google.com/finance/info?client=ig&q=NASDAQ:%20AAPL
     static final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2";
 
     /**

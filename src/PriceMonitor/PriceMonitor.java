@@ -1,8 +1,7 @@
 package src.PriceMonitor;
 
-import src.PriceMonitor.CryptoCurrency.CryptoCurrencyPriceMonitor;
+import src.PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import src.PriceMonitor.stock.StockItem;
-import src.PriceMonitor.stock.StockPriceMonitor;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -43,8 +42,8 @@ public class PriceMonitor {
     }
 
     public void Start() throws InterruptedException {
-        CryptoCurrencyPriceMonitor cryptoMonitor = new CryptoCurrencyPriceMonitor();
-        StockPriceMonitor stockMonitor = new StockPriceMonitor();
+
+        NasdaqWebParser parser = new NasdaqWebParser();
 
         boolean shouldContinue = true;
         while (shouldContinue) {
@@ -54,7 +53,7 @@ public class PriceMonitor {
                 try {
                     for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
 
-                        double stockPrice = stockMonitor.GetPrice(symbol);
+                        double stockPrice = parser.QuoteSymbolePrice(symbol);
                         System.out.println(symbol + " price been updated " + stockPrice);
                         StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
                         stockItem.Price = stockPrice;
