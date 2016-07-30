@@ -54,6 +54,7 @@ public class PriceMonitor {
                     for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
 
                         double stockPrice = parser.QuoteSymbolePrice(symbol);
+
                         System.out.println(symbol + " price been updated " + stockPrice);
                         StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
                         stockItem.Price = stockPrice;

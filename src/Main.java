@@ -87,6 +87,11 @@ public class Main {
             DataItem[] dataItems = dataManager.GetDataItems();
             StockItem[] stockItems = PriceMonitor.GetStocks();
 
+            // Skip if items are null or empty
+            if (dataItems == null || dataItems.length == 0 || stockItems == null || stockItems.length == 0) {
+                Thread.sleep(10 * 1000);
+                continue;
+            }
             Arrays.stream(stockItems).forEach(p -> stockPriceMap.put(p.Symbol, p));
 
             double baseValue = Arrays.stream(dataItems).map(item -> item.Price * item.Number).reduce((a, b) -> a + b).get();
