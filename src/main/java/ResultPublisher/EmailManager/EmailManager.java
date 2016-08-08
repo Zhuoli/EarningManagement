@@ -40,7 +40,8 @@ public class EmailManager {
 
             // Loop until authentication succeed or exception raised
             try {
-                System.out.println("Passord:");
+                System.out.println("Email:" + username);
+                System.out.print("Password:");
                 this.password = String.valueOf(scan.nextLine());
                 this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
                 this.isAuthenticated = true;
