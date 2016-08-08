@@ -48,28 +48,30 @@ public class PriceMonitor {
         boolean shouldContinue = true;
         while (shouldContinue) {
             // Lock the map for multi thread safe
-            System.out.println("PriceMonitor acquired lock: stockPriceMap");
+            //System.out.println("PriceMonitor acquired lock: stockPriceMap");
             synchronized (PriceMonitor.stockPriceMap) {
-                try {
-                    for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
+                for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
 
+                    try {
                         double stockPrice = parser.QuoteSymbolePrice(symbol);
-
-                        System.out.println(symbol + " price been updated " + stockPrice);
+                        String line = String.format("Symbol: %1$-8s Price: %2$.2f", symbol, stockPrice);
+                        System.out.println(line);
                         StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
                         stockItem.Price = stockPrice;
                         stockItem.LastUpdateTime = LocalDateTime.now();
 
                         // Sleep a while to avoid access limit
                         Thread.sleep(500);
+                    } catch (Exception exc) {
+                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", symbol);
+                        System.err.println(line);
+                        System.err.print(exc.getMessage());
                     }
-                } catch (Exception exc) {
-                    System.out.println(exc);
                 }
             }
-            System.out.println("PriceMonitor released lock: stockPriceMap");
+            //System.out.println("PriceMonitor released lock: stockPriceMap");
 
-            System.out.println("PriceMonitor sleep...");
+            //System.out.println("PriceMonitor sleep...");
 
             // Sleep a whole
             Thread.sleep(PriceMonitor.SCAN_PERIOD);
