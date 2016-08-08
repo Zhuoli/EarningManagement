@@ -26,7 +26,7 @@ public class PriceMonitor {
         return PriceMonitor.stockPriceMap.values().toArray(new StockItem[0]);
     }
 
-    // Register
+    // Register symbols to price monitor
     public static void RegisterStockSymboles(String... symbols) {
         // Lock the map for multi thread safe
 
@@ -41,6 +41,11 @@ public class PriceMonitor {
         System.out.println("RegisterStockSymboles released lock: stockPriceMap");
     }
 
+    /**
+     * Independent thread periodically update stock price
+     *
+     * @throws InterruptedException
+     */
     public void Start() throws InterruptedException {
 
         NasdaqWebParser parser = new NasdaqWebParser();
@@ -69,9 +74,6 @@ public class PriceMonitor {
                     }
                 }
             }
-            //System.out.println("PriceMonitor released lock: stockPriceMap");
-
-            //System.out.println("PriceMonitor sleep...");
 
             // Sleep a whole
             Thread.sleep(PriceMonitor.SCAN_PERIOD);

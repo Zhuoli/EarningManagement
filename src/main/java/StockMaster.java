@@ -81,7 +81,7 @@ public class StockMaster {
         HashMap<String, StockItem> stockPriceMap = new HashMap<>();
         while (true) {
 
-            // Keeps updating symbols from datamanager
+            // Keeps updating symbols from data manager
             String[] symbols = dataManager.GetStockSymbolsInHand();
 
             // Register new symbols to price monitor
@@ -100,7 +100,7 @@ public class StockMaster {
                 continue;
             }
 
-            // Update Symbole to StockItem hashmap
+            // Update Symbol to StockItem hash map
             Arrays.stream(stockItems).forEach(p -> stockPriceMap.put(p.Symbol, p));
 
             // Buying value
@@ -111,7 +111,7 @@ public class StockMaster {
                     StockItem stockItem = stockPriceMap.get(item.Symbol);
                     currentValue += stockItem.Price * item.Number;
                 } else {
-                    System.out.println("Symbole price not found : " + item.Symbol);
+                    System.out.println("Symbol price not found : " + item.Symbol);
                 }
             }
             System.out.println(String.format("Buying price: %.2f", baseValue));
