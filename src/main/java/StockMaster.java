@@ -12,11 +12,11 @@ import java.util.concurrent.Executors;
 /**
  * Created by zhuoli on 6/23/16.
  */
-public class Main {
+public class StockMaster {
     public static void main(String[] args) {
 
         try {
-            new Main().start(args);
+            new StockMaster().start(args);
             return;
         } catch (Exception exc) {
             Log.Error("Unexpected exception: " + exc.toString());
