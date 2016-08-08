@@ -80,18 +80,30 @@ public class StockMaster {
 
         HashMap<String, StockItem> stockPriceMap = new HashMap<>();
         while (true) {
+
+            // Keeps updating symbols from datamanager
             String[] symbols = dataManager.GetStockSymbolsInHand();
+
+            // Register new symbols to price monitor
             PriceMonitor.RegisterStockSymboles(symbols);
+
+            // Get buying items
             DataItem[] dataItems = dataManager.GetDataItems();
+
+            // Get stock prices for each data item
             StockItem[] stockItems = PriceMonitor.GetStocks();
 
             // Skip if items are null or empty
             if (dataItems == null || dataItems.length == 0 || stockItems == null || stockItems.length == 0) {
+                System.out.println("Items are null or empty, sleep a while...");
                 Thread.sleep(10 * 1000);
                 continue;
             }
+
+            // Update Symbole to StockItem hashmap
             Arrays.stream(stockItems).forEach(p -> stockPriceMap.put(p.Symbol, p));
 
+            // Buying value
             double baseValue = Arrays.stream(dataItems).map(item -> item.Price * item.Number).reduce((a, b) -> a + b).get();
             double currentValue = 0;
             for (DataItem item : dataItems) {
@@ -102,8 +114,8 @@ public class StockMaster {
                     System.out.println("Symbole price not found : " + item.Symbol);
                 }
             }
-            System.out.println("Buying price: " + baseValue);
-            System.out.println("Current value: " + currentValue);
+            System.out.println(String.format("Buying price: %.2f", baseValue));
+            System.out.println(String.format("Current value: %.2f", currentValue));
             Thread.sleep(10 * 1000);
         }
     }
