@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Created by zhuoli on 7/29/16.
@@ -26,12 +27,14 @@ public class NasdaqWebParserTests {
     @Test
     public void GetElementTextTest() {
         NasdaqWebParser parser = new NasdaqWebParser();
-        LocalDate jddate = parser.QupteEarningReportDate("jd");
-        LocalDate yrddate = parser.QupteEarningReportDate("yrd");
-        System.out.println(jddate);
-        System.out.println(yrddate);
-        Assert.assertTrue(!jddate.isEqual(LocalDate.MAX));
-        Assert.assertTrue(!yrddate.isEqual(LocalDate.MAX));
+        Optional<LocalDate> jddate = parser.QupteEarningReportDate("jd");
+        Optional<LocalDate> yrddate = parser.QupteEarningReportDate("yrd");
+        Optional<LocalDate> teslaDate = parser.QupteEarningReportDate("tsla");
+        System.out.println(jddate.get());
+        System.out.println(yrddate.get());
+        Assert.assertTrue(jddate.isPresent());
+        Assert.assertTrue(yrddate.isPresent());
+        Assert.assertTrue(!teslaDate.isPresent());
     }
 
     @Test

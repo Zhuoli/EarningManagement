@@ -11,10 +11,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
-
-/**
- * Created by zhuoli on 7/28/16.
- */
+import java.util.Optional;
 
 /**
  * Nasdaq Website parser.
@@ -36,7 +33,7 @@ public class NasdaqWebParser {
      * @param symbol
      * @return
      */
-    public LocalDate QupteEarningReportDate(String symbol) {
+    public Optional<LocalDate> QupteEarningReportDate(String symbol) {
         String dateText = "";
         try {
 
@@ -47,13 +44,18 @@ public class NasdaqWebParser {
             Element el = (Element) nd;
 
             // Clean date time text
-            dateText = el.text().split(":")[1].trim();
+            String[] strs = el.text().split(":");
+            if (strs.length == 1) {
+                System.out.println("Report Date Unknown.");
+                return Optional.empty();
+            }
+            dateText = strs[1].trim();
 
             // Parse date time string
-            return this.ParseEaringReportDate(dateText);
+            return Optional.of(this.ParseEaringReportDate(dateText));
         } catch (Exception exc) {
             System.err.println(String.format("Can't resolve localdate string %1$s", dateText));
-            return LocalDate.MAX;
+            return Optional.empty();
         }
     }
 

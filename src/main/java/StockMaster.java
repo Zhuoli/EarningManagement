@@ -2,6 +2,7 @@ import DataManager.DataItem;
 import DataManager.DataManager;
 import PriceMonitor.PriceMonitor;
 import PriceMonitor.stock.StockItem;
+import ResultPublisher.ResultPublisher;
 import Utility.Log;
 
 import java.util.Arrays;
@@ -31,26 +32,18 @@ public class StockMaster {
 
         Log.PrintAndLog("CurrencyProphet been launched. all rights reserved");
 
-//        // Initialize email recipient
-//        Scanner scanner = new Scanner(System.in);
-//        System.out.println("Input your recipient email:");
-//        String emailAddress = scanner.nextLine();
-//        System.out.println("Input your recipient password:");
-//        String pw = scanner.nextLine();
-//
-//        Email user = Email.GetInstance(emailAddress, pw);
-//        try {
-//            user.Authenticate();
-//        } catch (Exception exc) {
-//            System.out.println("Error on authenticating email recipient" + exc.getMessage());
-//        }
+        // Task executor
+        ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
+
+        ResultPublisher publisher = ResultPublisher.GetInstance().CollectInformationAndAuthenticate();
 
         Log.PrintAndLog("Email authenticate succeed");
         Log.PrintAndLog("Monitor started...");
 
-
-        // Task executor
-        ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
+        // Submit data manager
+        taskExecutor.submit(() -> {
+            publisher.Start();
+        });
 
         DataManager dataManager = new DataManager();
 
