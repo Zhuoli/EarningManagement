@@ -54,9 +54,10 @@ public class ResultPublisher {
         {
             while (true) {
                 if (!messageQueue.isEmpty()) {
-                    StringBuilder sb = new StringBuilder("Publishing Message Result:  " + LocalDate.now());
+                    StringBuilder sb = new StringBuilder("********************" + System.lineSeparator() + "Publishing Message Result:  " + LocalDate.now());
                     String result = messageQueue.stream().reduce(sb.toString(), (a, b) -> a + System.lineSeparator() + b);
-                    System.out.println(result);
+                    messageQueue.clear();
+                    System.out.println(result + System.lineSeparator() + "********************");
                 }
                 Thread.sleep(30 * 1000);
             }
