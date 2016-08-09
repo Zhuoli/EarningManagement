@@ -39,7 +39,6 @@ public class DataManager {
     public void Start() {
         try {
             while (true) {
-                System.out.println("Data manager is running..");
                 // Re-register stock Items if file size has changed
                 if (this.lastModifiedDateTime == 0 || this.path.toFile().lastModified() != this.lastModifiedDateTime) {
                     this.lastModifiedDateTime = this.path.toFile().lastModified();

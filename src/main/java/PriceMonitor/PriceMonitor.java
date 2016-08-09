@@ -35,7 +35,6 @@ public class PriceMonitor {
     public static void RegisterStockSymboles(JSONObject boughtStockItem) {
         // Lock the map for multi thread safe
 
-        System.out.println("RegisterStockSymboles acquired lock: stockPriceMap");
         synchronized (PriceMonitor.stockPriceMap) {
             String symbol = boughtStockItem.getString("Symbol");
             double price = boughtStockItem.getDouble("Price");
@@ -44,7 +43,6 @@ public class PriceMonitor {
                 return;
             PriceMonitor.stockPriceMap.put(boughtStockItem.getString("Symbol"), new StockItem(symbol, price, number));
         }
-        System.out.println("RegisterStockSymboles released lock: stockPriceMap");
     }
 
     /**
@@ -83,7 +81,7 @@ public class PriceMonitor {
 
                     // Register Earning Report to Result publisher
                     if (localDate.isPresent()) {
-                        ResultPublisher.RegisterMessage(Strings.format("Stock {symbol} earning report date is {date}").with("symbol", symbol).with("date", localDate).build());
+                        ResultPublisher.RegisterMessage(Strings.format("Stock {symbol} earning report date is {date}").with("symbol", symbol).with("date", localDate.get()).build());
                     }
                 }
             }

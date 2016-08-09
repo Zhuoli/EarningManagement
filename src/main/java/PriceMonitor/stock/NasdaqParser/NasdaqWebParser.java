@@ -46,7 +46,6 @@ public class NasdaqWebParser {
             // Clean date time text
             String[] strs = el.text().split(":");
             if (strs.length == 1) {
-                System.out.println("Report Date Unknown.");
                 return Optional.empty();
             }
             dateText = strs[1].trim();
