@@ -2,11 +2,15 @@ package PriceMonitor;
 
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
+import ResultPublisher.ResultPublisher;
+import com.joanzapata.utils.Strings;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by zhuoli on 7/4/16.
@@ -71,6 +75,13 @@ public class PriceMonitor {
                         String line = String.format("Symbol: %1$-8s Price: UNKNOWN", symbol);
                         System.err.println(line);
                         System.err.print(exc.getMessage());
+                    }
+
+                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(symbol);
+
+                    // Register Earning Report to Result publisher
+                    if (localDate.isPresent()) {
+                        ResultPublisher.RegisterMessage(Strings.format("Stock {symbol} earning report date is {date}").with("symbol", symbol).with("date", localDate).build());
                     }
                 }
             }
