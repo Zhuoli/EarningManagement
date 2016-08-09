@@ -1,64 +1,55 @@
 package DataManager;
 
+import Utility.Constant;
+import Utility.Log;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import Utility.Constant;
-import Utility.Log;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by zhuoli on 6/25/16.
  */
 public class DataManager {
 
-    private static int count = 0;
-
     protected Path path = null;
-
+    Consumer<JSONObject> stockItemRegister;
     private long lastModifiedDateTime = 0;
-
-    private DataItem[] stockItems;
 
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public DataManager() throws IOException {
+    public DataManager(Consumer<JSONObject> stockItemRegister) throws IOException {
+        this.stockItemRegister = stockItemRegister;
         this.InitializeStockCSVFile();
-    }
-
-    public DataItem[] GetDataItems() {
-        return this.stockItems;
     }
 
     // Start thread
     public void Start() {
         try {
             while (true) {
-                Thread.sleep(3 * 1000);
-                // System.out.println("Hello DataManager is running: " + DataManager.count++);
-
-                // Update Stock Items if file size has changed
+                System.out.println("Data manager is running..");
+                // Re-register stock Items if file size has changed
                 if (this.lastModifiedDateTime == 0 || this.path.toFile().lastModified() != this.lastModifiedDateTime) {
                     this.lastModifiedDateTime = this.path.toFile().lastModified();
-                    this.stockItems = this.ReadStockCSVFile();
+                    this.ReadStockCSVFile().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
                 }
+                Thread.sleep(3 * 1000);
             }
         } catch (Exception exc) {
             Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
         }
-    }
-
-    public String[] GetStockSymbolsInHand() {
-        return Arrays.stream(stockItems).map(p -> p.Symbol).distinct().toArray(String[]::new);
     }
 
     /**
@@ -82,10 +73,6 @@ public class DataManager {
             Files.createFile(this.path);
         }
 
-        // Set the last modified date of the csv file
-        this.lastModifiedDateTime = this.path.toFile().lastModified();
-        this.stockItems = this.ReadStockCSVFile();
-
         System.out.println("The data file stored at : " + dir.getAbsolutePath());
     }
 
@@ -95,19 +82,30 @@ public class DataManager {
      * @return stock item array.
      * @throws IOException
      */
-    public DataItem[] ReadStockCSVFile() throws IOException {
+    public List<JSONObject> ReadStockCSVFile() throws IOException {
 
-        LinkedList<DataItem> stockItems = new LinkedList<>();
-        FileReader in = new FileReader(this.path.toFile());
-        CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(in);
+        LinkedList<JSONObject> jsonObjectList = new LinkedList<>();
+
+        try (BufferedReader inReader = new BufferedReader(new FileReader(this.path.toFile()))) {
+            CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(inReader);
+            this.Helper(jsonObjectList, records);
+
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+        return jsonObjectList;
+    }
+
+
+    private void Helper(LinkedList<JSONObject> jsonObjectList, CSVParser records) {
         for (CSVRecord record : records) {
             String symbol = record.get("Symbol");
             double price = Double.parseDouble(record.get("Price"));
             int number = Integer.parseInt(record.get("Number"));
-            stockItems.add(new DataItem(symbol, price, number));
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("Symbol", symbol).put("Price", price).put("Number", number);
+            jsonObjectList.add(jsonObject);
         }
-        in.close();
-        return stockItems.toArray(new DataItem[0]);
     }
 
     /**
