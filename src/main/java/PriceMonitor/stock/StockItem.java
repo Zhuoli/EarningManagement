@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 public class StockItem {
 
     public String Symbol;
+    public double BuyingPrice;
+    public int Number;
     public String CompanyName;
     public LocalDateTime LastUpdateTime;
     public double Price;
@@ -16,7 +18,9 @@ public class StockItem {
 
     }
 
-    public StockItem(String symbol) {
+    public StockItem(String symbol, double buyingPrice, int number) {
         this.Symbol = symbol;
+        this.BuyingPrice = buyingPrice;
+        this.Number = number;
     }
 }

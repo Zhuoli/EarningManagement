@@ -4,6 +4,7 @@ import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
 import ResultPublisher.ResultPublisher;
 import com.joanzapata.utils.Strings;
+import org.json.JSONObject;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,16 +32,17 @@ public class PriceMonitor {
     }
 
     // Register symbols to price monitor
-    public static void RegisterStockSymboles(String... symbols) {
+    public static void RegisterStockSymboles(JSONObject boughtStockItem) {
         // Lock the map for multi thread safe
 
         System.out.println("RegisterStockSymboles acquired lock: stockPriceMap");
         synchronized (PriceMonitor.stockPriceMap) {
-            for (String symbol : symbols) {
-                if (PriceMonitor.stockPriceMap.containsKey(symbol))
-                    continue;
-                PriceMonitor.stockPriceMap.put(symbol, new StockItem(symbol));
-            }
+            String symbol = boughtStockItem.getString("Symbol");
+            double price = boughtStockItem.getDouble("Price");
+            int number = boughtStockItem.getInt("Number");
+            if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString("Symbol")))
+                return;
+            PriceMonitor.stockPriceMap.put(boughtStockItem.getString("Symbol"), new StockItem(symbol, price, number));
         }
         System.out.println("RegisterStockSymboles released lock: stockPriceMap");
     }

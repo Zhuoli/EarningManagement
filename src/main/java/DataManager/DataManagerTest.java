@@ -1,12 +1,14 @@
 
 package DataManager;
 
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 /**
  * Created by zhuoli on 7/12/16.
@@ -18,7 +20,7 @@ public class DataManagerTest {
 
     @Before
     public void TestSetUp() throws IOException {
-        this.dataManager = new DataManager();
+        this.dataManager = new DataManager(a -> a.get("Symbol"));
     }
 
     @Test
@@ -47,21 +49,9 @@ public class DataManagerTest {
      * Test Read StockItems.
      */
     public void testReadStockCSVFile() throws IOException {
-        DataItem[] stockItems = this.dataManager.ReadStockCSVFile();
+        List<JSONObject> stockItems = this.dataManager.ReadStockCSVFile();
 
         Assert.assertNotNull(stockItems);
-        Assert.assertTrue(stockItems.length > 0);
-    }
-
-
-    @Test
-    /**
-     * Test Read GetStockSymbolsInHand.
-     */
-    public void testGetStockSymbolsInHand() {
-        String[] symbols = this.dataManager.GetStockSymbolsInHand();
-
-        Assert.assertNotNull(symbols);
-        Assert.assertTrue(symbols.length > 0);
+        Assert.assertTrue(stockItems.size() > 0);
     }
 }
