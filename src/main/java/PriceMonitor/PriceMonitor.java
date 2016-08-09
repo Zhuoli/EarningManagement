@@ -54,33 +54,34 @@ public class PriceMonitor {
         NasdaqWebParser parser = new NasdaqWebParser();
 
         boolean shouldContinue = true;
+
         while (shouldContinue) {
             // Lock the map for multi thread safe
             //System.out.println("PriceMonitor acquired lock: stockPriceMap");
             synchronized (PriceMonitor.stockPriceMap) {
-                for (String symbol : PriceMonitor.stockPriceMap.keySet()) {
+                for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
 
                     try {
-                        double stockPrice = parser.QuoteSymbolePrice(symbol);
-                        String line = String.format("Symbol: %1$-8s Price: %2$.2f", symbol, stockPrice);
+                        stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
+
+                        // Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
+                        String line = String.format("Symbol: %1$-8s Price: %2$6.2f Number: %3$4d Earning: %4$8.2f", stockItem.Symbol, stockItem.Price, stockItem.Number, (stockItem.Price - stockItem.BuyingPrice) * stockItem.Number);
                         System.out.println(line);
-                        StockItem stockItem = PriceMonitor.stockPriceMap.get(symbol);
-                        stockItem.Price = stockPrice;
                         stockItem.LastUpdateTime = LocalDateTime.now();
 
                         // Sleep a while to avoid access limit
                         Thread.sleep(500);
                     } catch (Exception exc) {
-                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", symbol);
+                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
                         System.err.println(line);
                         System.err.print(exc.getMessage());
                     }
 
-                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(symbol);
+                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
 
                     // Register Earning Report to Result publisher
                     if (localDate.isPresent()) {
-                        ResultPublisher.RegisterMessage(String.format("%1$-8s quarterly earning report date: %2$s ", symbol, localDate.get()));
+                        ResultPublisher.RegisterMessage(String.format("%1$-8s quarterly earning report date: %2$s ", stockItem.Symbol, localDate.get()));
                     }
                 }
             }
