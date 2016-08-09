@@ -3,7 +3,6 @@ package PriceMonitor;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
 import ResultPublisher.ResultPublisher;
-import com.joanzapata.utils.Strings;
 import org.json.JSONObject;
 
 import java.time.LocalDate;
@@ -81,7 +80,7 @@ public class PriceMonitor {
 
                     // Register Earning Report to Result publisher
                     if (localDate.isPresent()) {
-                        ResultPublisher.RegisterMessage(Strings.format("Stock {symbol} earning report date is {date}").with("symbol", symbol).with("date", localDate.get()).build());
+                        ResultPublisher.RegisterMessage(String.format("%1$-8s quarterly earning report date: %2$s ", symbol, localDate.get()));
                     }
                 }
             }
