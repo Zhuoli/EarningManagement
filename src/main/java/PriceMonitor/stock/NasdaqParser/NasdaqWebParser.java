@@ -38,10 +38,11 @@ public class NasdaqWebParser {
      */
     public Optional<LocalDate> QupteEarningReportDate(String symbol) {
         String dateText = "";
+        String reportUrl = NasdaqWebParser.EarningReportUrl + "/" + symbol;
         try {
 
             // Parse html to get target element
-            Document dom = Jsoup.connect(NasdaqWebParser.EarningReportUrl + "/" + symbol).get();
+            Document dom = Jsoup.connect(reportUrl).get();
             Element element = dom.getElementById("left-column-div");
             Node nd = element.childNodes().stream().filter(node -> node.nodeName().equals("h2")).findFirst().get();
             Element el = (Element) nd;
@@ -55,10 +56,12 @@ public class NasdaqWebParser {
 
             // Parse date time string
             return Optional.of(this.ParseEaringReportDate(dateText));
+        } catch (java.net.SocketTimeoutException socketException) {
+            Logger.getGlobal().log(Level.SEVERE, String.format("Timeout on accessing url: \"%s\"", reportUrl), socketException);
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.WARNING, String.format("Can't resolve localdate string %1$s", dateText), exc);
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
     public String GetElementText(String url, String elementID) {
@@ -71,7 +74,7 @@ public class NasdaqWebParser {
             }
             return element.html();
         } catch (Exception exc) {
-            Logger.getGlobal().log(Level.WARNING, Strings.format("Failed to resolve the ElementText of element ID : {id} from {url}.").with("id", elementID).with("url", url).build(), exc);
+            Logger.getGlobal().log(Level.WARNING, Strings.format("Failed to resolve the ElementText of element ID : {id} from \"{url}\".").with("id", elementID).with("url", url).build(), exc);
             return "";
         }
     }
