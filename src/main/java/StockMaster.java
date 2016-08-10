@@ -26,6 +26,9 @@ public class StockMaster {
         System.exit(1);
     }
 
+    /**
+     * Sets up the envrionment.
+     */
     public static void SetUp() {
         try {
             String filePath = Strings.format("./{classname}.log").with("classname", StockMaster.class.getName()).build();
@@ -42,8 +45,12 @@ public class StockMaster {
         }
     }
 
-
-    // Entry of start method
+    /**
+     * Entry of the StockMaster.
+     *
+     * @param args
+     * @throws Exception
+     */
     public void start(String[] args) throws Exception {
 
         // Log start time
@@ -77,7 +84,7 @@ public class StockMaster {
             try {
                 priceMonitor.Start();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Logger.getGlobal().log(Level.SEVERE, "PriceMonitor thread has crashed for the reason" + e.getMessage(), e);
             }
         });
 
