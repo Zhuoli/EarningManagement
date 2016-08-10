@@ -1,11 +1,11 @@
 package ResultPublisher;
 
 import ResultPublisher.EmailManager.EmailManager;
-import Utility.Log;
 
 import javax.mail.NoSuchProviderException;
 import java.time.LocalDate;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.logging.Logger;
 
 /**
  * User interactive via Email
@@ -62,7 +62,7 @@ public class ResultPublisher {
                 Thread.sleep(30 * 1000);
             }
         } catch (InterruptedException exc) {
-            Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
+            Logger.getGlobal().severe("Price Prophet thread Interrupted: " + exc.getMessage());
         }
     }
 }
