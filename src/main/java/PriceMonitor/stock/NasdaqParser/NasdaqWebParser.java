@@ -1,5 +1,6 @@
 package PriceMonitor.stock.NasdaqParser;
 
+import com.joanzapata.utils.Strings;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,6 +13,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Nasdaq Website parser.
@@ -53,7 +56,7 @@ public class NasdaqWebParser {
             // Parse date time string
             return Optional.of(this.ParseEaringReportDate(dateText));
         } catch (Exception exc) {
-            System.err.println(String.format("Can't resolve localdate string %1$s", dateText));
+            Logger.getGlobal().log(Level.WARNING, String.format("Can't resolve localdate string %1$s", dateText), exc);
             return Optional.empty();
         }
     }
@@ -68,6 +71,7 @@ public class NasdaqWebParser {
             }
             return element.html();
         } catch (Exception exc) {
+            Logger.getGlobal().log(Level.WARNING, Strings.format("Failed to resolve the ElementText of element ID : {id} from {url}.").with("id", elementID).with("url", url).build(), exc);
             return "";
         }
     }

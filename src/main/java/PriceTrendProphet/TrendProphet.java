@@ -1,6 +1,6 @@
 package PriceTrendProphet;
 
-import Utility.Log;
+import java.util.logging.Logger;
 
 /**
  * Created by zhuoli on 6/23/16.
@@ -18,7 +18,7 @@ public class TrendProphet {
                 System.out.println("Hello TrendProphet is running: " + TrendProphet.count++);
             }
         } catch (InterruptedException exc) {
-            Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
+            Logger.getGlobal().severe("Price Prophet thread Interrupted: " + exc.getMessage());
         }
     }
 }

@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by zhuoli on 7/9/16.
@@ -139,7 +141,7 @@ public class EmailManager {
                 MonitorEmail email = new MonitorEmail(folderName, msg.getSubject(), this.username, addresses[0].toString(), content);
                 emailList.add(email);
             } catch (Exception exc) {
-                System.out.println("\tERROR:" + exc.getMessage());
+                Logger.getGlobal().log(Level.WARNING, "Failed to receive email.", exc);
             }
         }
 

@@ -1,7 +1,6 @@
 package DataManager;
 
 import Utility.Constant;
-import Utility.Log;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -17,6 +16,8 @@ import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by zhuoli on 6/25/16.
@@ -47,7 +48,7 @@ public class DataManager {
                 Thread.sleep(3 * 1000);
             }
         } catch (Exception exc) {
-            Log.PrintAndLog("Price Prophet thread Interrupted: " + exc.getMessage());
+            Logger.getGlobal().severe("Price Prophet thread Interrupted: " + exc.getMessage());
         }
     }
 
@@ -90,7 +91,7 @@ public class DataManager {
             this.Helper(jsonObjectList, records);
 
         } catch (Exception e) {
-            System.err.println(e);
+            Logger.getGlobal().log(Level.SEVERE, "Failed to read stock CSV file", e);
         }
         return jsonObjectList;
     }
