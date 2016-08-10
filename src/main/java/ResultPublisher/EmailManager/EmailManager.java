@@ -28,6 +28,17 @@ public class EmailManager {
     }
 
     /**
+     * Email manager constructor.
+     *
+     * @param username: Username
+     * @param password: Password
+     */
+    public EmailManager(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    /**
      * Authenticate Gmail credentail.
      *
      * @throws NoSuchProviderException
@@ -35,25 +46,21 @@ public class EmailManager {
     public void Authenticate() throws NoSuchProviderException {
 
         // Verify credential
-        Session session = Session.getInstance(new Properties());
-        this.receiveStore = session.getStore("imaps");
         Scanner scan = new Scanner(System.in);
         while (!this.isAuthenticated) {
 
-            // Loop until authentication succeed or exception raised
-            try {
+            // Read credential from console if not set
+            if (this.username == null || this.username.isEmpty() || this.password == null || this.password.isEmpty()) {
+
+                // Loop until authentication succeed or exception raised
                 System.out.println("Email:" + username);
                 System.out.print("Password:");
                 this.password = String.valueOf(scan.nextLine());
-                this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
-                this.isAuthenticated = true;
-            } catch (MessagingException e) {
-                System.out.println("Password incorrect, please try again; " + e.getMessage());
-            } finally {
-                try {
-                    this.receiveStore.close();
-                } catch (MessagingException e) {
-                }
+            }
+            this.isAuthenticated = this.EmailAuthenticate(this.username, this.password);
+
+            if (!this.isAuthenticated) {
+                this.password = null;
             }
         }
 
@@ -73,6 +80,32 @@ public class EmailManager {
                         return new PasswordAuthentication(username, password);
                     }
                 });
+    }
+
+    /**
+     * Email authenticate.
+     *
+     * @param username
+     * @param password
+     * @return
+     */
+    public boolean EmailAuthenticate(String username, String password) {
+        Session session = Session.getInstance(new Properties());
+        try {
+
+            this.receiveStore = session.getStore("imaps");
+            this.receiveStore.connect("imap.googlemail.com", 993, username, password);
+            return true;
+        } catch (MessagingException e) {
+            System.out.println("Password incorrect, please try again; " + e.getMessage());
+        } finally {
+            if (this.receiveStore != null)
+                try {
+                    this.receiveStore.close();
+                } catch (MessagingException e) {
+                }
+        }
+        return false;
     }
 
     /**
@@ -107,7 +140,13 @@ public class EmailManager {
         return true;
     }
 
-
+    /**
+     * Receive emails for the given folder.
+     * @param folderName: email folder
+     * @param from: From
+     * @return
+     * @throws MessagingException
+     */
     public MonitorEmail[] Receive(String folderName, String from) throws MessagingException {
         List<MonitorEmail> emailList = new LinkedList<>();
 
