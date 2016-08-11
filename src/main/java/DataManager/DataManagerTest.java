@@ -20,7 +20,7 @@ public class DataManagerTest {
 
     @Before
     public void TestSetUp() throws IOException {
-        this.dataManager = new DataManager(a -> a.get("Symbol"));
+        this.dataManager = new DataManager(a -> a.get(DataManager.SYMBOL));
     }
 
     @Test
@@ -39,9 +39,9 @@ public class DataManagerTest {
         String[] headers = this.dataManager.Getheaders();
 
         Assert.assertTrue(headers.length == 3);
-        Assert.assertEquals(headers[0], "Symbol");
-        Assert.assertEquals(headers[1], "Price");
-        Assert.assertEquals(headers[2], "Number");
+        Assert.assertEquals(headers[0], DataManager.SYMBOL);
+        Assert.assertEquals(headers[1], DataManager.PRICE);
+        Assert.assertEquals(headers[2], DataManager.SHARES);
     }
 
     @Test

@@ -24,6 +24,9 @@ import java.util.logging.Logger;
  */
 public class DataManager {
 
+    static final public String SYMBOL = "Symbol";
+    static final public String PRICE = "Price";
+    static final public String SHARES = "Shares";
     protected Path path = null;
     Consumer<JSONObject> stockItemRegister;
     private long lastModifiedDateTime = 0;
@@ -55,7 +58,7 @@ public class DataManager {
     /**
      * Initialize csv file if not exist.
      * Header format:
-     * Stock Symbol | Bought Price | Bought Number
+     * Stock Symbol | Bought Price | Bought Shares
      */
     public void InitializeStockCSVFile() throws IOException {
 
@@ -78,7 +81,6 @@ public class DataManager {
 
     /**
      * Read stocks from CSV file.
-     *
      * @return stock item array.
      * @throws IOException
      */
@@ -88,24 +90,19 @@ public class DataManager {
 
         try (BufferedReader inReader = new BufferedReader(new FileReader(this.path.toFile()))) {
             CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(inReader);
-            this.Helper(jsonObjectList, records);
+            for (CSVRecord record : records) {
+                String symbol = record.get(DataManager.SYMBOL);
+                double price = Double.parseDouble(record.get(DataManager.PRICE));
+                int number = Integer.parseInt(record.get(DataManager.SHARES));
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.PRICE, price).put(DataManager.SHARES, number);
+                jsonObjectList.add(jsonObject);
+            }
 
         } catch (Exception e) {
             Logger.getGlobal().log(Level.SEVERE, "Failed to read stock CSV file", e);
         }
         return jsonObjectList;
-    }
-
-
-    private void Helper(LinkedList<JSONObject> jsonObjectList, CSVParser records) {
-        for (CSVRecord record : records) {
-            String symbol = record.get("Symbol");
-            double price = Double.parseDouble(record.get("Price"));
-            int number = Integer.parseInt(record.get("Number"));
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("Symbol", symbol).put("Price", price).put("Number", number);
-            jsonObjectList.add(jsonObject);
-        }
     }
 
     /**
