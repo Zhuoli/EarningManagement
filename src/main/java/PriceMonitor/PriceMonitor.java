@@ -1,5 +1,6 @@
 package PriceMonitor;
 
+import DataManager.DataManager;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
 import ResultPublisher.ResultPublisher;
@@ -35,12 +36,12 @@ public class PriceMonitor {
         // Lock the map for multi thread safe
 
         synchronized (PriceMonitor.stockPriceMap) {
-            String symbol = boughtStockItem.getString("Symbol");
-            double price = boughtStockItem.getDouble("Price");
-            int number = boughtStockItem.getInt("Number");
-            if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString("Symbol")))
+            String symbol = boughtStockItem.getString(DataManager.SYMBOL);
+            double price = boughtStockItem.getDouble(DataManager.PRICE);
+            int number = boughtStockItem.getInt(DataManager.SHARES);
+            if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL)))
                 return;
-            PriceMonitor.stockPriceMap.put(boughtStockItem.getString("Symbol"), new StockItem(symbol, price, number));
+            PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, price, number));
         }
     }
 
@@ -65,7 +66,7 @@ public class PriceMonitor {
                         stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
 
                         // Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
-                        String line = String.format("Symbol: %1$-8s Price: %2$6.2f Number: %3$4d Earning: %4$8.2f", stockItem.Symbol, stockItem.Price, stockItem.Number, (stockItem.Price - stockItem.BuyingPrice) * stockItem.Number);
+                        String line = String.format("Symbol: %1$-8s Price: %2$6.2f Shares: %3$4d Earning: %4$8.2f", stockItem.Symbol, stockItem.Price, stockItem.Shares, (stockItem.Price - stockItem.AverageCost) * stockItem.Shares);
                         System.out.println(line);
                         stockItem.LastUpdateTime = LocalDateTime.now();
 

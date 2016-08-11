@@ -101,8 +101,8 @@ public class StockMaster {
             }
 
             // Buying value
-            double baseValue = Arrays.stream(stockItems).map(item -> item.BuyingPrice * item.Number).reduce((a, b) -> a + b).get();
-            double currentValue = Arrays.stream(stockItems).map(item -> item.Price * item.Number).reduce((a, b) -> a + b).get();
+            double baseValue = Arrays.stream(stockItems).map(item -> item.AverageCost * item.Shares).reduce((a, b) -> a + b).get();
+            double currentValue = Arrays.stream(stockItems).map(item -> item.Price * item.Shares).reduce((a, b) -> a + b).get();
             StringBuilder sb = new StringBuilder("**************************************************************" + System.lineSeparator());
             sb.append(String.format("Buying price: %.2f" + System.lineSeparator(), baseValue));
             sb.append(String.format("Current value: %.2f" + System.lineSeparator(), currentValue));
