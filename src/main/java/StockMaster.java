@@ -25,7 +25,7 @@ public class StockMaster {
     }
 
     /**
-     * Sets up the envrionment.
+     * Sets up the environment.
      */
     public static void SetUp() {
         try {
@@ -57,27 +57,29 @@ public class StockMaster {
         // Task executor
         ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
 
+        // Initialize result publisher and authenticate user information
         ResultPublisher publisher = ResultPublisher.GetInstance(PriceMonitor::GetStocks).CollectInformationAndAuthenticate();
 
         System.out.println("Email authenticate succeed");
         System.out.println("Monitor started...");
 
+        // Initialize price monitor
         PriceMonitor priceMonitor = new PriceMonitor();
 
         // Initialize data manager and StockRegister method
         DataManager dataManager = new DataManager(PriceMonitor::RegisterStockSymboles);
 
-        // Submit data manager
+        // Submit result publisher thread
         taskExecutor.submit(() -> {
             publisher.Start();
         });
 
-        // Submit data manager
+        // Submit data manager thread
         taskExecutor.submit(() -> {
             dataManager.Start();
         });
 
-        // Submit Price monitor task
+        // Submit Price monitor thread
         taskExecutor.submit(() -> {
             try {
                 priceMonitor.Start();
@@ -86,9 +88,10 @@ public class StockMaster {
             }
         });
 
-        while (true) {
+        // Wait for all threads done
+        taskExecutor.shutdown();
 
-            Thread.sleep(10 * 1000);
-        }
+        // Log for Abnormal state
+        Logger.getGlobal().severe("System shutdown");
     }
 }
