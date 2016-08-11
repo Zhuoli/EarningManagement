@@ -1,10 +1,8 @@
 import DataManager.DataManager;
 import PriceMonitor.PriceMonitor;
-import PriceMonitor.stock.StockItem;
 import ResultPublisher.ResultPublisher;
 import com.joanzapata.utils.Strings;
 
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.*;
@@ -59,7 +57,7 @@ public class StockMaster {
         // Task executor
         ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
 
-        ResultPublisher publisher = ResultPublisher.GetInstance().CollectInformationAndAuthenticate();
+        ResultPublisher publisher = ResultPublisher.GetInstance(PriceMonitor::GetStocks).CollectInformationAndAuthenticate();
 
         System.out.println("Email authenticate succeed");
         System.out.println("Monitor started...");
@@ -90,24 +88,6 @@ public class StockMaster {
 
         while (true) {
 
-            // Get stock prices for each data item
-            StockItem[] stockItems = PriceMonitor.GetStocks();
-
-            // Skip if items are null or empty
-            if (stockItems == null || stockItems.length == 0) {
-                System.out.println("Items are null or empty, sleep a while...");
-                Thread.sleep(10 * 1000);
-                continue;
-            }
-
-            // Buying value
-            double baseValue = Arrays.stream(stockItems).map(item -> item.AverageCost * item.Shares).reduce((a, b) -> a + b).get();
-            double currentValue = Arrays.stream(stockItems).map(item -> item.Price * item.Shares).reduce((a, b) -> a + b).get();
-            StringBuilder sb = new StringBuilder("**************************************************************" + System.lineSeparator());
-            sb.append(String.format("Buying price: %.2f" + System.lineSeparator(), baseValue));
-            sb.append(String.format("Current value: %.2f" + System.lineSeparator(), currentValue));
-            sb.append("**************************************************************" + System.lineSeparator());
-            System.out.println(sb.toString());
             Thread.sleep(10 * 1000);
         }
     }

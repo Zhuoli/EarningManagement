@@ -3,7 +3,6 @@ package PriceMonitor;
 import DataManager.DataManager;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
-import ResultPublisher.ResultPublisher;
 import org.json.JSONObject;
 
 import java.time.LocalDate;
@@ -21,12 +20,22 @@ public class PriceMonitor {
     // Scan period 10 second
     static final int SCAN_PERIOD = 10 * 1000;
 
+    /**
+     * Key: Symbol
+     * Value: StockItem
+     */
     public static Map<String, StockItem> stockPriceMap;
+
 
     public PriceMonitor() {
         PriceMonitor.stockPriceMap = Collections.synchronizedMap(new HashMap<>());
     }
 
+    /**
+     * Get stock items.
+     *
+     * @return
+     */
     public static StockItem[] GetStocks() {
         return PriceMonitor.stockPriceMap.values().toArray(new StockItem[0]);
     }
@@ -65,9 +74,6 @@ public class PriceMonitor {
                     try {
                         stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
 
-                        // Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
-                        String line = String.format("Symbol: %1$-8s Price: %2$6.2f Shares: %3$4d Earning: %4$8.2f", stockItem.Symbol, stockItem.Price, stockItem.Shares, (stockItem.Price - stockItem.AverageCost) * stockItem.Shares);
-                        System.out.println(line);
                         stockItem.LastUpdateTime = LocalDateTime.now();
 
                         // Sleep a while to avoid access limit
@@ -80,9 +86,9 @@ public class PriceMonitor {
 
                     Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
 
-                    // Register Earning Report to Result publisher
+                    // Update earning report date
                     if (localDate.isPresent()) {
-                        ResultPublisher.RegisterMessage(String.format("%1$-8s quarterly earning report date: %2$s ", stockItem.Symbol, localDate.get()));
+                        stockItem.setEarningReportDate(localDate.get());
                     }
                 }
             }
