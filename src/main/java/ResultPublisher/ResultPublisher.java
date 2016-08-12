@@ -4,8 +4,18 @@ import PriceMonitor.stock.StockItem;
 import ResultPublisher.EmailManager.EmailManager;
 import ResultPublisher.EmailManager.MonitorEmail;
 import com.joanzapata.utils.Strings;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.mail.NoSuchProviderException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -44,10 +54,44 @@ public class ResultPublisher {
      */
     public ResultPublisher CollectInformationAndAuthenticate() throws NoSuchProviderException {
         if (this.emailUser == null) {
-            this.emailUser = new EmailManager();
+            this.emailUser = this.InitializeEmailManagerFromXML("resourceConfig.xml");
         }
         this.emailUser.Authenticate();
         return this;
+    }
+
+    /**
+     * Initialize EmailMananger from XML configuration file.
+     *
+     * @param pathString : Configuration file path
+     * @return: Emailmanager
+     */
+    private EmailManager InitializeEmailManagerFromXML(String pathString) {
+        Path currentPath = Paths.get("./");
+        System.out.println("Currrent path: " + currentPath.toAbsolutePath());
+        Path path = Paths.get("src", "resources", pathString);
+        if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            try {
+                DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                Document doc = builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
+                Element documentElement = doc.getDocumentElement();
+                Element emailsNode = (Element) documentElement.getElementsByTagName("Emails").item(0);
+                Element databasesNode = (Element) documentElement.getElementsByTagName("Databases").item(0);
+
+                String emailUser = emailsNode.getElementsByTagName("User").item(0).getTextContent();
+                String emailPassoword = emailsNode.getElementsByTagName("Password").item(0).getTextContent();
+                String emailRecipient = emailsNode.getElementsByTagName("Recipient").item(0).getTextContent();
+
+                System.out.println(emailUser + "  " + emailPassoword + "  " + emailRecipient);
+
+                return new EmailManager(emailUser, emailPassoword, emailRecipient);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return new EmailManager();
+        } else {
+            return new EmailManager();
+        }
     }
 
     // Result publisher
@@ -90,7 +134,7 @@ public class ResultPublisher {
                 MonitorEmail[] emails = this.emailUser.ReceiveUnreadEmails();
 
                 if (emails != null && emails.length > 0) {
-                    this.emailUser.Send(EmailManager.FROM, "Stock Report", reportBuilder.toString());
+                    this.emailUser.Send(EmailManager.EmailRecipient, "Stock Report", reportBuilder.toString());
                 }
 
                 // Buying value

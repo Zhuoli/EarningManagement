@@ -18,8 +18,8 @@ import java.util.logging.Logger;
  */
 public class EmailManager {
 
-    public final static String FROM = "robotonyszu@gmail.com";
     final static String FOLDER = "Inbox";
+    public static String EmailRecipient = "robotonyszu@gmail.com";
     Session sendSession = null;
     String username = "digitcurrencymonitor@gmail.com";
     String password = "";
@@ -35,9 +35,10 @@ public class EmailManager {
      * @param username: Username
      * @param password: Password
      */
-    public EmailManager(String username, String password) {
+    public EmailManager(String username, String password, String recipient) {
         this.username = username;
         this.password = password;
+        EmailManager.EmailRecipient = recipient;
     }
 
     /**
@@ -167,7 +168,7 @@ public class EmailManager {
             for (Message msg : messages) {
                 try {
                     Address[] addresses = msg.getFrom();
-                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.FROM)) {
+                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.EmailRecipient)) {
                         System.out.println(addresses[0].toString());
                         continue;
                     }

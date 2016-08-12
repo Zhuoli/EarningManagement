@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EarningManagerConfigure>
+    <Emails id="Emails" type="xs:ID">
+        <User>user@gmail.com</User>
+        <Password>12345</Password>
+        <Recipient>recipient@gmail.com</Recipient>
+    </Emails>
+    <Databases id="Databases" type="xs:ID">
+        <Url>localhost</Url>
+        <User>user</User>
+        <Password>Thick slices made from our homemade sourdough bread</Password>
+    </Databases>
+</EarningManagerConfigure>
