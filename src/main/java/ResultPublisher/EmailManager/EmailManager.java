@@ -18,6 +18,8 @@ import java.util.logging.Logger;
  */
 public class EmailManager {
 
+    public final static String FROM = "robotonyszu@gmail.com";
+    final static String FOLDER = "Inbox";
     Session sendSession = null;
     String username = "digitcurrencymonitor@gmail.com";
     String password = "";
@@ -141,13 +143,11 @@ public class EmailManager {
     }
 
     /**
-     * Receive emails for the given folder.
-     * @param folderName: email folder
-     * @param from: From
+     * ReceiveUnreadEmails emails for the given folder with given From.
      * @return
      * @throws MessagingException
      */
-    public MonitorEmail[] Receive(String folderName, String from) throws MessagingException {
+    public MonitorEmail[] ReceiveUnreadEmails() throws MessagingException {
         List<MonitorEmail> emailList = new LinkedList<>();
 
         if (this.receiveStore == null)
@@ -155,36 +155,45 @@ public class EmailManager {
 
         this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
 
-        Folder infolder = this.receiveStore.getFolder(folderName);
-        infolder.open(Folder.READ_ONLY);
+        Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
 
-         /*  Get the messages which is unread in the Inbox*/
-        Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+        try {
 
-        for (Message msg : messages) {
-            try {
-                Address[] addresses = msg.getFrom();
-                if (!addresses[0].toString().toLowerCase().contains(from)) {
-                    System.out.println(addresses[0].toString());
-                    continue;
-                }
-                String content = "";
-                Multipart multipart = (Multipart) msg.getContent();
-                for (int i = 0; i < multipart.getCount(); i++) {
-                    BodyPart part = multipart.getBodyPart(i);
-                    if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html")) {
-                        content += part.getContent() + "\n\n";
+            infolder.open(Folder.READ_WRITE);
+
+            /*  Get the messages which is unread in the Inbox*/
+            Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+
+            for (Message msg : messages) {
+                try {
+                    Address[] addresses = msg.getFrom();
+                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.FROM)) {
+                        System.out.println(addresses[0].toString());
+                        continue;
                     }
+                    String content = "";
+                    Multipart multipart = (Multipart) msg.getContent();
+                    for (int i = 0; i < multipart.getCount(); i++) {
+                        BodyPart part = multipart.getBodyPart(i);
+                        if (part.getContentType().toLowerCase().contains("text/plain") || part.getContentType().toLowerCase().contains("text/html")) {
+                            content += part.getContent() + "\n\n";
+                        }
+                    }
+
+                    // You might think the way to do this is to get the message, set the Flags.Flag.SEEN flag to true, and then call message.saveChanges(). Oddly, this is not the case.
+                    // Instead, the JavaMail API Design Specification, Chapter 4, section "The Flags Class" states that the SEEN flag is implicitly set when the contents of a message are retrieved.
+                    // http://stackoverflow.com/questions/7678919/javamail-mark-gmail-message-as-read
+                    msg.getContent();
+                    MonitorEmail email = new MonitorEmail(EmailManager.FOLDER, msg.getSubject(), this.username, addresses[0].toString(), content);
+                    emailList.add(email);
+                } catch (Exception exc) {
+                    Logger.getGlobal().log(Level.WARNING, "Failed to receive email.", exc);
                 }
-
-                MonitorEmail email = new MonitorEmail(folderName, msg.getSubject(), this.username, addresses[0].toString(), content);
-                emailList.add(email);
-            } catch (Exception exc) {
-                Logger.getGlobal().log(Level.WARNING, "Failed to receive email.", exc);
             }
+        } finally {
+            infolder.close(false);
+            this.receiveStore.close();
         }
-
-        this.receiveStore.close();
         return emailList.toArray(new MonitorEmail[0]);
     }
 }
