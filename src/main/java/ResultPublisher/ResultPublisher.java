@@ -2,10 +2,12 @@ package ResultPublisher;
 
 import PriceMonitor.stock.StockItem;
 import ResultPublisher.EmailManager.EmailManager;
+import ResultPublisher.EmailManager.MonitorEmail;
 import com.joanzapata.utils.Strings;
 
 import javax.mail.NoSuchProviderException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -64,16 +66,32 @@ public class ResultPublisher {
                     continue;
                 }
 
-                System.out.println();
-                System.out.println(Strings.format("*************** Stock Report on {date} ***************").with("date", LocalDate.now().toString()).build());
-                System.out.println("Stock Price Table:");
-                System.out.println(this.GenerateLatestPriceReport(stockItems));
-                System.out.println("Earning Report Date:");
-                System.out.println();
-                System.out.println(this.GenerateQuartelyReportDate(stockItems));
-                System.out.println("-------------------------Summary------------------------------");
-                System.out.println(this.GenerateEarningReport(stockItems));
-                System.out.println("**************************************************************");
+                StringBuilder reportBuilder = new StringBuilder();
+
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append(Strings.format("*************** Stock Report on {date} ***************").with("date", LocalDateTime.now().toString()).build());
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append("Stock Price Table:");
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append(this.GenerateLatestPriceReport(stockItems));
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append("Earning Report Date:");
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append(this.GenerateQuartelyReportDate(stockItems));
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append("-------------------------Summary------------------------------");
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append(this.GenerateEarningReport(stockItems));
+                reportBuilder.append(System.lineSeparator());
+                reportBuilder.append("**************************************************************");
+
+                System.out.println(reportBuilder.toString());
+
+                MonitorEmail[] emails = this.emailUser.ReceiveUnreadEmails();
+
+                if (emails != null && emails.length > 0) {
+                    this.emailUser.Send(EmailManager.FROM, "Stock Report", reportBuilder.toString());
+                }
 
                 // Buying value
                 Thread.sleep(5 * 1000);

@@ -5,6 +5,7 @@ import com.joanzapata.utils.Strings;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
 /**
@@ -88,8 +89,10 @@ public class StockMaster {
             }
         });
 
-        // Wait for all threads done
+        // Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted. Invocation has no additional effect if already shut down.
         taskExecutor.shutdown();
+        // Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs, or the current thread is interrupted, whichever happens first.
+        taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         // Log for Abnormal state
         Logger.getGlobal().severe("System shutdown");
