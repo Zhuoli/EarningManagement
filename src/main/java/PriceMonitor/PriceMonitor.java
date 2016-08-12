@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created by zhuoli on 7/4/16.
@@ -44,14 +46,20 @@ public class PriceMonitor {
     public static void RegisterStockSymboles(JSONObject boughtStockItem) {
         // Lock the map for multi thread safe
 
-        synchronized (PriceMonitor.stockPriceMap) {
-            String symbol = boughtStockItem.getString(DataManager.SYMBOL);
-            double price = boughtStockItem.getDouble(DataManager.PRICE);
-            int number = boughtStockItem.getInt(DataManager.SHARES);
-            if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL)))
-                return;
-            PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, price, number));
+        try {
+            synchronized (PriceMonitor.stockPriceMap) {
+                String symbol = boughtStockItem.getString(DataManager.SYMBOL);
+                double price = boughtStockItem.getDouble(DataManager.PRICE);
+                int number = boughtStockItem.getInt(DataManager.SHARES);
+                if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL)))
+                    return;
+                PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, price, number));
+            }
+
+        } catch (Exception exc) {
+            Logger.getGlobal().log(Level.SEVERE, "Failure to register stock symbol " + boughtStockItem.toString(), exc);
         }
+
     }
 
     /**
@@ -65,36 +73,43 @@ public class PriceMonitor {
 
         boolean shouldContinue = true;
 
-        while (shouldContinue) {
-            // Lock the map for multi thread safe
-            //System.out.println("PriceMonitor acquired lock: stockPriceMap");
-            synchronized (PriceMonitor.stockPriceMap) {
-                for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
+        try {
 
-                    try {
-                        stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
+            while (shouldContinue) {
+                // Lock the map for multi thread safe
+                //System.out.println("PriceMonitor acquired lock: stockPriceMap");
+                synchronized (PriceMonitor.stockPriceMap) {
+                    for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
 
-                        stockItem.LastUpdateTime = LocalDateTime.now();
+                        try {
+                            stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
 
-                        // Sleep a while to avoid access limit
-                        Thread.sleep(500);
-                    } catch (Exception exc) {
-                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
-                        System.err.println(line);
-                        System.err.print(exc.getMessage());
-                    }
+                            stockItem.LastUpdateTime = LocalDateTime.now();
 
-                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
+                            // Sleep a while to avoid access limit
+                            Thread.sleep(500);
+                        } catch (Exception exc) {
+                            String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
+                            System.err.println(line);
+                            System.err.print(exc.getMessage());
+                        }
 
-                    // Update earning report date
-                    if (localDate.isPresent()) {
-                        stockItem.setEarningReportDate(localDate.get());
+                        Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
+
+                        // Update earning report date
+                        if (localDate.isPresent()) {
+                            stockItem.setEarningReportDate(localDate.get());
+                        }
                     }
                 }
+
+                // Sleep a whole
+                Thread.sleep(PriceMonitor.SCAN_PERIOD);
             }
 
-            // Sleep a whole
-            Thread.sleep(PriceMonitor.SCAN_PERIOD);
+            Logger.getGlobal().severe("PriceMonitor dropped the infinite loop");
+        } catch (Exception exc) {
+            Logger.getGlobal().log(Level.SEVERE, "PriceMonitor crashed.", exc);
         }
     }
 }
