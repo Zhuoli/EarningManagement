@@ -31,6 +31,8 @@ public class StockMaster {
     public static void SetUp() {
         try {
             String filePath = Strings.format("./{classname}.log").with("classname", StockMaster.class.getName()).build();
+
+            // Log format
             SimpleFormatter simpleFormatter = new SimpleFormatter();
             Handler fileHandler = new FileHandler(filePath);
 
