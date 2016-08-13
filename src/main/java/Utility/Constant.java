@@ -5,5 +5,5 @@ package Utility;
  */
 public class Constant {
 
-    public static String DATA_ROOT = "CurrencyData";
+    public static String DATA_ROOT = "./src/resources";
 }

@@ -70,6 +70,10 @@ public class ResultPublisher {
         Path currentPath = Paths.get("./");
         System.out.println("Currrent path: " + currentPath.toAbsolutePath());
         Path path = Paths.get("src", "resources", pathString);
+
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS))
+            path = Paths.get(pathString);
+
         if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             try {
                 DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -82,11 +86,9 @@ public class ResultPublisher {
                 String emailPassoword = emailsNode.getElementsByTagName("Password").item(0).getTextContent();
                 String emailRecipient = emailsNode.getElementsByTagName("Recipient").item(0).getTextContent();
 
-                System.out.println(emailUser + "  " + emailPassoword + "  " + emailRecipient);
-
                 return new EmailManager(emailUser, emailPassoword, emailRecipient);
             } catch (Exception e) {
-                e.printStackTrace();
+                Logger.getGlobal().log(Level.SEVERE, "Failed to read configuration file from " + pathString, e);
             }
             return new EmailManager();
         } else {

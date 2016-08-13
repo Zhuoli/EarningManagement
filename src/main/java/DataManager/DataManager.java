@@ -7,7 +7,6 @@ import org.apache.commons.csv.CSVRecord;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,19 +63,16 @@ public class DataManager {
 
         this.path = Paths.get(Constant.DATA_ROOT, "transactionRecords.csv").toAbsolutePath();
 
-        File dir = new File(Constant.DATA_ROOT);
-
-        // Create Data directory if not exist
-        if (!dir.exists() || !dir.isDirectory()) {
-            dir.mkdir();
-        }
+        // Update csv location
+        if (!Files.exists(this.path))
+            this.path = Paths.get("transactionRecords.csv");
 
         // Create file if not exist
         if (!Files.exists(this.path)) {
             Files.createFile(this.path);
         }
 
-        System.out.println("The data file stored at : " + dir.getAbsolutePath());
+        System.out.println("The transaction records file stored at : " + this.path.toUri());
     }
 
     /**
