@@ -85,7 +85,7 @@ public class DataManager {
         LinkedList<JSONObject> jsonObjectList = new LinkedList<>();
 
         try (BufferedReader inReader = new BufferedReader(new FileReader(this.path.toFile()))) {
-            CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter('\t').parse(inReader);
+            CSVParser records = CSVFormat.EXCEL.withFirstRecordAsHeader().withDelimiter(',').parse(inReader);
             for (CSVRecord record : records) {
                 String symbol = record.get(DataManager.SYMBOL);
                 double price = Double.parseDouble(record.get(DataManager.PRICE));
