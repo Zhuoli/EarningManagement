@@ -56,7 +56,7 @@ public class ResultPublisher {
         if (this.emailUser == null) {
             this.emailUser = this.InitializeEmailManagerFromXML("resourceConfig.xml");
         }
-        this.emailUser.Authenticate();
+        //this.emailUser.Authenticate();
         return this;
     }
 

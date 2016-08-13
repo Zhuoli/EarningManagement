@@ -16,11 +16,11 @@ import java.util.List;
 public class DataManagerTest {
 
     // Crypto Currency Price Monitor
-    private DataManager dataManager;
+    private CSVDataManager dataManager;
 
     @Before
     public void TestSetUp() throws IOException {
-        this.dataManager = new DataManager(a -> a.get(DataManager.SYMBOL));
+        this.dataManager = new CSVDataManager(a -> a.get(CSVDataManager.SYMBOL));
     }
 
     @Test
@@ -39,9 +39,9 @@ public class DataManagerTest {
         String[] headers = this.dataManager.Getheaders();
 
         Assert.assertTrue(headers.length == 3);
-        Assert.assertEquals(headers[0], DataManager.SYMBOL);
-        Assert.assertEquals(headers[1], DataManager.PRICE);
-        Assert.assertEquals(headers[2], DataManager.SHARES);
+        Assert.assertEquals(headers[0], CSVDataManager.SYMBOL);
+        Assert.assertEquals(headers[1], CSVDataManager.PRICE);
+        Assert.assertEquals(headers[2], CSVDataManager.SHARES);
     }
 
     @Test
