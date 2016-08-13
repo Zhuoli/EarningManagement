@@ -13,7 +13,7 @@ public class EmailManagerTest {
 
     @Before
     public void SetUp() {
-        this.emailManager = new EmailManager("digitcurrencymonitor@gmail.com", "");
+        this.emailManager = new EmailManager("user@gmai.com", "123456", "recipient@gmail.com");
     }
 
     @Test
@@ -24,6 +24,6 @@ public class EmailManagerTest {
 
     @Test
     public void testAuthenticate() throws Exception {
-        Assert.assertTrue(this.emailManager.EmailAuthenticate(this.emailManager.username, this.emailManager.password));
+        Assert.assertTrue(this.emailManager.EmailAuthenticate(this.emailManager.getUsername(), this.emailManager.getPassword()));
     }
 }
