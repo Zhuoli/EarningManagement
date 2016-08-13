@@ -18,14 +18,16 @@ import java.util.logging.Logger;
  */
 public class EmailManager {
 
-    final static String FOLDER = "Inbox";
-    public static String EmailRecipient = "robotonyszu@gmail.com";
-    Session sendSession = null;
-    String username = "digitcurrencymonitor@gmail.com";
-    String password = "";
-    boolean isAuthenticated = false;
-    Store receiveStore = null;
-
+    private final static String FOLDER = "Inbox";
+    private static String EmailRecipient;
+    private String username;
+    private String password;
+    private Session sendSession = null;
+    private boolean isAuthenticated = false;
+    private Store receiveStore = null;
+    /**
+     * Constructor
+     */
     public EmailManager() {
     }
 
@@ -39,6 +41,23 @@ public class EmailManager {
         this.username = username;
         this.password = password;
         EmailManager.EmailRecipient = recipient;
+    }
+
+    /**
+     * EmailRecipient getter.
+     *
+     * @return: Email recipient
+     */
+    public static String getEmailRecipient() {
+        return EmailRecipient;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     /**
@@ -168,7 +187,7 @@ public class EmailManager {
             for (Message msg : messages) {
                 try {
                     Address[] addresses = msg.getFrom();
-                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.EmailRecipient)) {
+                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.getEmailRecipient())) {
                         System.out.println(addresses[0].toString());
                         continue;
                     }

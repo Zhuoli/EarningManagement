@@ -134,7 +134,7 @@ public class ResultPublisher {
                 MonitorEmail[] emails = this.emailUser.ReceiveUnreadEmails();
 
                 if (emails != null && emails.length > 0) {
-                    this.emailUser.Send(EmailManager.EmailRecipient, "Stock Report", reportBuilder.toString());
+                    this.emailUser.Send(EmailManager.getEmailRecipient(), "Stock Report", reportBuilder.toString());
                 }
 
                 // Buying value
