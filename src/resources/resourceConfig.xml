@@ -6,8 +6,9 @@
         <Recipient>recipient@gmail.com</Recipient>
     </Emails>
     <Databases id="Databases" type="xs:ID">
-        <Url>localhost</Url>
-        <User>user</User>
-        <Password>Thick slices made from our homemade sourdough bread</Password>
+        <Url>earningmanagement.cqxahokpf4dx.us-west-2.rds.amazonaws.com</Url>
+        <Database>EarningManagerDB</Database>
+        <User>zhuoli</User>
+        <Password>cp8482617</Password>
     </Databases>
 </EarningManagerConfigure>
