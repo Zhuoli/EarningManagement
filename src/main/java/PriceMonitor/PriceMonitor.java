@@ -49,11 +49,17 @@ public class PriceMonitor {
         try {
             synchronized (PriceMonitor.stockPriceMap) {
                 String symbol = boughtStockItem.getString(DataManager.SYMBOL);
-                double price = boughtStockItem.getDouble(DataManager.PRICE);
+                double averageCost = boughtStockItem.getDouble(DataManager.AVERAGECOST);
                 int number = boughtStockItem.getInt(DataManager.SHARES);
-                if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL)))
-                    return;
-                PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, price, number));
+
+                // Update stock mapper
+                if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL))) {
+                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(DataManager.SYMBOL));
+                    item.AverageCost = averageCost;
+                    item.Shares = number;
+                } else {
+                    PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, averageCost, number));
+                }
             }
 
         } catch (Exception exc) {

@@ -15,9 +15,11 @@ import java.util.logging.Logger;
  */
 public class DataManager {
 
+
     static final public String SYMBOL = "Symbol";
-    static final public String PRICE = "Price";
+    static final public String AVERAGECOST = "AverageCost";
     static final public String SHARES = "Shares";
+
     protected Consumer<JSONObject> stockItemRegister;
 
     protected DataManager()
