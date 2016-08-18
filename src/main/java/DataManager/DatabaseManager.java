@@ -6,8 +6,7 @@ import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -26,6 +25,12 @@ import java.util.logging.Logger;
  */
 public class DatabaseManager extends DataManager{
 
+
+    static final public String SYMBOL = "Symbol";
+    static final public String SHARECOST = "ShareCost";
+    static final public String PRICE = "Price";
+    static final public String SHARES = "Shares";
+    static final public String REPORTDATE = "EarningReportDatetime";
     private String url;
 
     private String databaseString;
@@ -33,6 +38,8 @@ public class DatabaseManager extends DataManager{
     private String userName;
 
     private String password;
+
+    MysqlDataSource dataSource;
 
     private DatabaseManager() {
 
@@ -55,11 +62,11 @@ public class DatabaseManager extends DataManager{
         Statement stmt = null;
         ResultSet rs = null;
 
-        MysqlDataSource dataSource = new MysqlDataSource();
-        dataSource.setUser(this.userName);
-        dataSource.setPassword(this.password);
-        dataSource.setServerName(this.url);
-        dataSource.setDatabaseName(this.databaseString);
+        this.dataSource = new MysqlDataSource();
+        this.dataSource.setUser(this.userName);
+        this.dataSource.setPassword(this.password);
+        this.dataSource.setServerName(this.url);
+        this.dataSource.setDatabaseName(this.databaseString);
 
         try {
             conn = dataSource.getConnection();
@@ -83,7 +90,55 @@ public class DatabaseManager extends DataManager{
     @Override
     public List<JSONObject> UpdateStockItemsIfHasNew()
     {
+        try {
+            return this.ReadStockDatabase();
+        }
+        catch (SQLException e)
+        {
+            Logger.getGlobal().log(Level.SEVERE, "SQL Failure", e);
+        }
         return new LinkedList<>();
+    }
+
+    /**
+     * Read stocks from CSV file.
+     * @return stock item array.
+     * @throws IOException
+     */
+    public List<JSONObject> ReadStockDatabase() throws SQLException {
+
+        LinkedList<JSONObject> jsonObjectList = new LinkedList<>();
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = dataSource.getConnection();
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM StockItem");
+            while (rs.next())
+            {
+                String symbol = rs.getString(DatabaseManager.SYMBOL);
+                double price = rs.getDouble(DatabaseManager.PRICE);
+                int number = rs.getInt(DatabaseManager.SHARES);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put(CSVDataManager.SYMBOL, symbol).put(CSVDataManager.PRICE, price).put(CSVDataManager.SHARES, number);
+                jsonObjectList.add(jsonObject);
+
+            }
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            try {
+                stmt.close();
+                conn.close();
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            };
+        }
+        return jsonObjectList;
     }
 
     /**
