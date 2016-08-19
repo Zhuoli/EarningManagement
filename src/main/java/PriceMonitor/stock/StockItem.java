@@ -23,8 +23,13 @@ public class StockItem {
 
     // Stock price
     public double Price;
+
+    // 1 year target price by Nasdaq
+    public double OneYearTargetNasdaq;
+
     // Earning report date if it has
     private Optional<LocalDate> EarningReportDate;
+
 
     /**
      * StockItem constructor.
@@ -33,10 +38,11 @@ public class StockItem {
      * @param averageCost: Should always be greater than zero
      * @param shares:      Should always be greater or equal to zero
      */
-    public StockItem(String symbol, double averageCost, int shares) {
+    public StockItem(String symbol, double averageCost, int shares, double oneYearTargetNasdaq) {
         this.Symbol = symbol;
         this.AverageCost = averageCost;
         this.Shares = shares;
+        this.OneYearTargetNasdaq = oneYearTargetNasdaq;
         this.EarningReportDate = Optional.empty();
     }
 

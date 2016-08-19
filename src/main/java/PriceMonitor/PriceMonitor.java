@@ -51,6 +51,7 @@ public class PriceMonitor {
                 String symbol = boughtStockItem.getString(DataManager.SYMBOL);
                 double averageCost = boughtStockItem.getDouble(DataManager.AVERAGECOST);
                 int number = boughtStockItem.getInt(DataManager.SHARES);
+                double targetPriceNasdaq = boughtStockItem.getDouble(DataManager.OneYearTargetPrice);
 
                 // Update stock mapper
                 if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL))) {
@@ -58,7 +59,7 @@ public class PriceMonitor {
                     item.AverageCost = averageCost;
                     item.Shares = number;
                 } else {
-                    PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, averageCost, number));
+                    PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, averageCost, number, targetPriceNasdaq));
                 }
             }
 
