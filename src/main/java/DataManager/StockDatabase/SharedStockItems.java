@@ -10,4 +10,5 @@ import javax.persistence.Table;
 @Table(name="SharedStockItems")
 public class SharedStockItems {
 
+
 }

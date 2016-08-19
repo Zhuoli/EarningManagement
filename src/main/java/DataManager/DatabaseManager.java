@@ -1,5 +1,7 @@
 package DataManager;
 
+import PriceMonitor.stock.StockItem;
+import com.joanzapata.utils.Strings;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
@@ -18,6 +20,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -118,7 +121,7 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public List<JSONObject> UpdateStockItemsIfHasNew()
+    public List<JSONObject> ReadSharedStocksFromDB()
     {
         try {
             return this.ReadStockDatabase();
@@ -126,6 +129,40 @@ public class DatabaseManager extends DataManager{
             Logger.getGlobal().log(Level.SEVERE, "SQL Failure", e);
         }
         return new LinkedList<>();
+    }
+
+    @Override
+    public void WriteStockItemBackToDB(StockItem item) throws SQLException {
+        String updateTableSQL = Strings.format("UPDATE StockItem SET {1} = {average}, {2} = {reportDate}, {3}={shares}, {4}={price}, {5}={targetPrice} WHERE {0} = {symbol}").
+                with("0", DataManager.SYMBOL).with("symbol", item.Symbol).
+                with("1", DataManager.AVERAGECOST).with("average", item.AverageCost).
+                with("2", DataManager.EARNING_REPORT_DATETIME).with("reportDate", item.getEarningReportDate().orElseGet(() -> {
+            return LocalDate.now();
+        })).
+                with("3", DataManager.SHARES).with("shares", item.Shares).
+                with("4", DataManager.PRICE).with("price", item.Price).
+                with("5", DataManager.OneYearTargetPrice).with("targetPrice", item.OneYearTargetNasdaq).
+                build();
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = dataSource.getConnection();
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(updateTableSQL);
+
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            try {
+                stmt.close();
+                conn.close();
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -150,8 +187,9 @@ public class DatabaseManager extends DataManager{
                 double price = rs.getDouble(DatabaseManager.AVERAGECOST);
                 int number = rs.getInt(DatabaseManager.SHARES);
                 double oneYearTargetPrice = rs.getDouble(DatabaseManager.OneYearTargetPrice);
+                java.sql.Date datetime = rs.getDate(DatabaseManager.EARNING_REPORT_DATETIME);
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.AVERAGECOST, price).put(DataManager.SHARES, number).put(DatabaseManager.OneYearTargetPrice,oneYearTargetPrice);
+                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.AVERAGECOST, price).put(DataManager.SHARES, number).put(DatabaseManager.OneYearTargetPrice, oneYearTargetPrice).put(DataManager.EARNING_REPORT_DATETIME, datetime);
                 jsonObjectList.add(jsonObject);
 
             }

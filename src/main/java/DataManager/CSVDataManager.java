@@ -1,6 +1,5 @@
 package DataManager;
 
-import PriceMonitor.stock.StockItem;
 import Utility.Constant;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -87,7 +86,7 @@ public class CSVDataManager extends DataManager{
     }
 
     @Override
-    public List<JSONObject> UpdateStockItemsIfHasNew()
+    public List<JSONObject> ReadSharedStocksFromDB()
     {
         // Re-register stock Items if file size has changed
         if (this.lastModifiedDateTime == 0 || this.path.toFile().lastModified() != this.lastModifiedDateTime) {
