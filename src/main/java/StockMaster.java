@@ -1,5 +1,4 @@
 import DataManager.DataManager;
-import DataManager.DatabaseManager;
 import PriceMonitor.PriceMonitor;
 import ResultPublisher.ResultPublisher;
 import com.joanzapata.utils.Strings;
@@ -71,7 +70,7 @@ public class StockMaster {
         PriceMonitor priceMonitor = new PriceMonitor();
 
         // Initialize data manager and StockRegister method
-        DataManager dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles);
+        DataManager dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles, PriceMonitor::GetStocks);
 
         // Submit result publisher thread
         taskExecutor.submit(() -> {
