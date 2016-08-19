@@ -149,8 +149,9 @@ public class DatabaseManager extends DataManager{
                 String symbol = rs.getString(DatabaseManager.SYMBOL);
                 double price = rs.getDouble(DatabaseManager.AVERAGECOST);
                 int number = rs.getInt(DatabaseManager.SHARES);
+                double oneYearTargetPrice = rs.getDouble(DatabaseManager.OneYearTargetPrice);
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.AVERAGECOST, price).put(DataManager.SHARES, number);
+                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.AVERAGECOST, price).put(DataManager.SHARES, number).put(DatabaseManager.OneYearTargetPrice,oneYearTargetPrice);
                 jsonObjectList.add(jsonObject);
 
             }

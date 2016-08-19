@@ -19,6 +19,7 @@ public class DataManager {
     static final public String SYMBOL = "Symbol";
     static final public String AVERAGECOST = "AverageCost";
     static final public String SHARES = "Shares";
+    static final public String OneYearTargetPrice = "OneYearTargetNasdaq";
 
     protected Consumer<JSONObject> stockItemRegister;
 
