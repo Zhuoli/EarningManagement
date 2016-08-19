@@ -1,6 +1,7 @@
 package PriceMonitor.stock.NasdaqParser;
 
 import com.joanzapata.utils.Strings;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,6 +26,8 @@ public class NasdaqWebParser {
 
     final static String EarningReportUrl = "http://www.nasdaq.com/earnings/report";
 
+    final  static  String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36";
+
     public double QuoteSymbolePrice(String symbol) {
         return Double.parseDouble(this.GetElementText(NasdaqWebParser.NasdaqBaseQuoteUrl + "/" + symbol, "qwidget_lastsale").replaceAll("[^\\d.]+", ""));
     }
@@ -42,7 +45,7 @@ public class NasdaqWebParser {
         try {
 
             // Parse html to get target element
-            Document dom = Jsoup.connect(reportUrl).get();
+            Document dom = Jsoup.connect(reportUrl).userAgent(NasdaqWebParser.USER_AGENT).get();
             Element element = dom.getElementById("left-column-div");
             Node nd = element.childNodes().stream().filter(node -> node.nodeName().equals("h2")).findFirst().get();
             Element el = (Element) nd;
@@ -64,16 +67,22 @@ public class NasdaqWebParser {
         return Optional.empty();
     }
 
+
     public String GetElementText(String url, String elementID) {
         try {
-
-            Document dom = Jsoup.connect(url).get();
+            Document dom = Jsoup.connect(url).userAgent(NasdaqWebParser.USER_AGENT).get();
             Element element = dom.getElementById(elementID);
             if (element.hasText()) {
                 return element.text();
             }
             return element.html();
-        } catch (Exception exc) {
+        }
+        catch (HttpStatusException exc)
+        {
+            Logger.getGlobal().log(Level.WARNING, Strings.format("Http status exception \"{errorCode}\" from \"{url}\".").with("errorCode", exc.getStatusCode()).with("url", url).build(), exc);
+            return "";
+        }
+        catch (Exception exc) {
             Logger.getGlobal().log(Level.WARNING, Strings.format("Failed to resolve the ElementText of element ID : {id} from \"{url}\".").with("id", elementID).with("url", url).build(), exc);
             return "";
         }
