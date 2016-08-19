@@ -187,8 +187,9 @@ public class EmailManager {
             for (Message msg : messages) {
                 try {
                     Address[] addresses = msg.getFrom();
+
+                    // Skip the unrelated emails
                     if (!addresses[0].toString().toLowerCase().contains(EmailManager.getEmailRecipient())) {
-                        System.out.println(addresses[0].toString());
                         continue;
                     }
                     String content = "";

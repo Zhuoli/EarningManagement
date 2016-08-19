@@ -80,7 +80,6 @@ public class ResultPublisher {
                 Document doc = builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
                 Element documentElement = doc.getDocumentElement();
                 Element emailsNode = (Element) documentElement.getElementsByTagName("Emails").item(0);
-                Element databasesNode = (Element) documentElement.getElementsByTagName("Databases").item(0);
 
                 String emailUser = emailsNode.getElementsByTagName("User").item(0).getTextContent();
                 String emailPassoword = emailsNode.getElementsByTagName("Password").item(0).getTextContent();
