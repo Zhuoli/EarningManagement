@@ -56,7 +56,6 @@ public class DataManager {
     public void Start() {
         try {
             while (true) {
-                System.out.println("Datamanager running.");
                 this.UpdateStockItemsIfHasNew().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
                 Thread.sleep(3 * 1000);
             }
