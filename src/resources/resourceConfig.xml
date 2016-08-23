@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EarningManagerConfigure>
     <Emails id="Emails" type="xs:ID">
-        <User>user@gmail.com</User>
-        <Password>12345</Password>
-        <Recipient>recipient@gmail.com</Recipient>
+        <User>digitcurrencymonitor@gmail.com</User>
+        <Password>gsbsEf*Y2TKwkhje7xeq</Password>
+        <Recipient>robotonyszu@gmail.com</Recipient>
     </Emails>
     <Databases id="Databases" type="xs:ID">
-        <Url>server</Url>
-        <Database>EarningManagerDB</Database>
-        <User>dbuser</User>
-        <Password>dbpassword</Password>
+        <Url>jdbc:mysql://localhost:3306/library</Url>
+        <Database>library</Database>
+        <User>root</User>
+        <Password>cp8482617</Password>
     </Databases>
 </EarningManagerConfigure>

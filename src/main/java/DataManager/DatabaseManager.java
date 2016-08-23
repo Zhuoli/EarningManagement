@@ -1,8 +1,10 @@
 package DataManager;
 
+import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.StockItem;
-import com.joanzapata.utils.Strings;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+import org.jooq.*;
+import org.jooq.impl.DSL;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,15 +18,15 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.time.LocalDate;
+import java.sql.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static JooqMap.Tables.SHAREDSTOCKITEMS;
+
 
 /**
  * Created by zhuolil on 8/17/16.
@@ -91,78 +93,79 @@ public class DatabaseManager extends DataManager{
     }
 
     public DatabaseManager Authenticate() throws SQLException {
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        this.dataSource = new MysqlDataSource();
-        this.dataSource.setUser(this.userName);
-        this.dataSource.setPassword(this.password);
-        this.dataSource.setServerName(this.url);
-        this.dataSource.setDatabaseName(this.databaseString);
-
-        try {
-            conn = dataSource.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM StockItem");
-            return this;
-
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            try {
-                stmt.close();
-                conn.close();
-                rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public List<JSONObject> ReadSharedStocksFromDB()
-    {
-        try {
-            return this.ReadStockDatabase();
-        } catch (SQLException e) {
-            Logger.getGlobal().log(Level.SEVERE, "SQL Failure", e);
-        }
-        return new LinkedList<>();
+        return this;
     }
 
     @Override
     public void WriteStockItemBackToDB(StockItem item) throws SQLException {
-        String updateTableSQL = Strings.format("UPDATE StockItem SET {1} = {average}, {2} = {reportDate}, {3}={shares}, {4}={price}, {5}={targetPrice} WHERE {0} = {symbol}").
-                with("0", DataManager.SYMBOL).with("symbol", item.Symbol).
-                with("1", DataManager.AVERAGECOST).with("average", item.AverageCost).
-                with("2", DataManager.EARNING_REPORT_DATETIME).with("reportDate", item.getEarningReportDate().orElseGet(() -> {
-            return LocalDate.now();
-        })).
-                with("3", DataManager.SHARES).with("shares", item.Shares).
-                with("4", DataManager.PRICE).with("price", item.Price).
-                with("5", DataManager.OneYearTargetPrice).with("targetPrice", item.OneYearTargetNasdaq).
-                build();
+//        String updateTableSQL = Strings.format("UPDATE StockItem SET {1} = {average}, {2} = {reportDate}, {3}={shares}, {4}={price}, {5}={targetPrice} WHERE {0} = {symbol}").
+//                with("0", DataManager.SYMBOL).with("symbol", item.Symbol).
+//                with("1", DataManager.AVERAGECOST).with("average", item.AverageCost).
+//                with("2", DataManager.EARNING_REPORT_DATETIME).with("reportDate", item.getEarningReportDate().orElseGet(() -> {
+//            return LocalDate.now();
+//        })).
+//                with("3", DataManager.SHARES).with("shares", item.Shares).
+//                with("4", DataManager.PRICE).with("price", item.Price).
+//                with("5", DataManager.OneYearTargetPrice).with("targetPrice", item.OneYearTargetNasdaq).
+//                build();
+//
+//        Connection conn = null;
+//        Statement stmt = null;
+//        ResultSet rs = null;
+//        try {
+//            conn = dataSource.getConnection();
+//            stmt = conn.createStatement();
+//            rs = stmt.executeQuery(updateTableSQL);
+//
+//        } catch (SQLException e) {
+//            throw e;
+//        } finally {
+//            try {
+//                stmt.close();
+//                conn.close();
+//                rs.close();
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//            }
+//        }
+    }
 
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
+    @Override
+    public List<SharedstockitemsRecord> ReadSharedStocksFromDB() {
+        LinkedList<SharedstockitemsRecord> sharedstockitemses = new LinkedList<>();
+
         try {
-            conn = dataSource.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery(updateTableSQL);
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            Logger.getGlobal().log(Level.SEVERE, "", e);
+            return sharedstockitemses;
+        }
+        // Connection is the only JDBC resource that we need
+        // PreparedStatement and ResultSet are handled by jOOQ, internally
+        try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
+            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+            Optional<Table<?>> table = this.GetTable(create, SHAREDSTOCKITEMS.getName());
+            if (!table.isPresent()) {
+                create.createTable(SHAREDSTOCKITEMS).columns(SHAREDSTOCKITEMS.fields()).execute();
+            }
+            Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            try {
-                stmt.close();
-                conn.close();
-                rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            for (Record r : result) {
+                String symbol = r.getValue(SHAREDSTOCKITEMS.SYMBOL);
+                Double averageCost = r.getValue(SHAREDSTOCKITEMS.SHAREDAVERAGECOST);
+                int shares = r.getValue(SHAREDSTOCKITEMS.SHARES);
+
+                sharedstockitemses.add((SharedstockitemsRecord) r);
+
+                System.out.println("Symbol: " + symbol + " AverageCost: " + averageCost + " Shares: " + shares);
             }
         }
+
+        // For the sake of this tutorial, let's keep exception handling simple
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return sharedstockitemses;
     }
 
     /**
@@ -206,4 +209,10 @@ public class DatabaseManager extends DataManager{
         }
         return jsonObjectList;
     }
+
+
+    public Optional<Table<?>> GetTable(DSLContext create, String tableName) {
+        return create.meta().getTables().stream().filter(p -> p.getName().equals(tableName)).findFirst();
+    }
+
 }

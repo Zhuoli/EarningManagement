@@ -6,11 +6,10 @@ package JooqMap;
 
 import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
-
-import javax.annotation.Generated;
-
 import org.jooq.UniqueKey;
 import org.jooq.impl.AbstractKeys;
+
+import javax.annotation.Generated;
 
 
 /**
