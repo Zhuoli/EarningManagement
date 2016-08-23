@@ -5,16 +5,14 @@ package JooqMap.tables.records;
 
 
 import JooqMap.tables.Sharedstockitems;
-
-import java.sql.Date;
-
-import javax.annotation.Generated;
-
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record5;
 import org.jooq.Row5;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import javax.annotation.Generated;
+import java.sql.Date;
 
 
 /**
@@ -33,10 +31,23 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     private static final long serialVersionUID = -587209248;
 
     /**
-     * Setter for <code>library.SharedStockItems.Symbol</code>.
+     * Create a detached SharedstockitemsRecord
      */
-    public void setSymbol(String value) {
-        set(0, value);
+    public SharedstockitemsRecord() {
+        super(Sharedstockitems.SHAREDSTOCKITEMS);
+    }
+
+    /**
+     * Create a detached, initialised SharedstockitemsRecord
+     */
+    public SharedstockitemsRecord(String symbol, Integer shares, Date reportdate, Double sharedaveragecost, Double targetprice) {
+        super(Sharedstockitems.SHAREDSTOCKITEMS);
+
+        set(0, symbol);
+        set(1, shares);
+        set(2, reportdate);
+        set(3, sharedaveragecost);
+        set(4, targetprice);
     }
 
     /**
@@ -47,10 +58,10 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     }
 
     /**
-     * Setter for <code>library.SharedStockItems.Shares</code>.
+     * Setter for <code>library.SharedStockItems.Symbol</code>.
      */
-    public void setShares(Integer value) {
-        set(1, value);
+    public void setSymbol(String value) {
+        set(0, value);
     }
 
     /**
@@ -61,10 +72,10 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     }
 
     /**
-     * Setter for <code>library.SharedStockItems.Reportdate</code>.
+     * Setter for <code>library.SharedStockItems.Shares</code>.
      */
-    public void setReportdate(Date value) {
-        set(2, value);
+    public void setShares(Integer value) {
+        set(1, value);
     }
 
     /**
@@ -75,10 +86,10 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     }
 
     /**
-     * Setter for <code>library.SharedStockItems.SharedAverageCost</code>.
+     * Setter for <code>library.SharedStockItems.Reportdate</code>.
      */
-    public void setSharedaveragecost(Double value) {
-        set(3, value);
+    public void setReportdate(Date value) {
+        set(2, value);
     }
 
     /**
@@ -89,11 +100,15 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     }
 
     /**
-     * Setter for <code>library.SharedStockItems.TargetPrice</code>. One year target price
+     * Setter for <code>library.SharedStockItems.SharedAverageCost</code>.
      */
-    public void setTargetprice(Double value) {
-        set(4, value);
+    public void setSharedaveragecost(Double value) {
+        set(3, value);
     }
+
+    // -------------------------------------------------------------------------
+    // Primary key information
+    // -------------------------------------------------------------------------
 
     /**
      * Getter for <code>library.SharedStockItems.TargetPrice</code>. One year target price
@@ -103,8 +118,15 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     }
 
     // -------------------------------------------------------------------------
-    // Primary key information
+    // Record5 type implementation
     // -------------------------------------------------------------------------
+
+    /**
+     * Setter for <code>library.SharedStockItems.TargetPrice</code>. One year target price
+     */
+    public void setTargetprice(Double value) {
+        set(4, value);
+    }
 
     /**
      * {@inheritDoc}
@@ -113,10 +135,6 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
     public Record1<String> key() {
         return (Record1) super.key();
     }
-
-    // -------------------------------------------------------------------------
-    // Record5 type implementation
-    // -------------------------------------------------------------------------
 
     /**
      * {@inheritDoc}
@@ -250,6 +268,10 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
         return this;
     }
 
+    // -------------------------------------------------------------------------
+    // Constructors
+    // -------------------------------------------------------------------------
+
     /**
      * {@inheritDoc}
      */
@@ -270,29 +292,5 @@ public class SharedstockitemsRecord extends UpdatableRecordImpl<Sharedstockitems
         value4(value4);
         value5(value5);
         return this;
-    }
-
-    // -------------------------------------------------------------------------
-    // Constructors
-    // -------------------------------------------------------------------------
-
-    /**
-     * Create a detached SharedstockitemsRecord
-     */
-    public SharedstockitemsRecord() {
-        super(Sharedstockitems.SHAREDSTOCKITEMS);
-    }
-
-    /**
-     * Create a detached, initialised SharedstockitemsRecord
-     */
-    public SharedstockitemsRecord(String symbol, Integer shares, Date reportdate, Double sharedaveragecost, Double targetprice) {
-        super(Sharedstockitems.SHAREDSTOCKITEMS);
-
-        set(0, symbol);
-        set(1, shares);
-        set(2, reportdate);
-        set(3, sharedaveragecost);
-        set(4, targetprice);
     }
 }

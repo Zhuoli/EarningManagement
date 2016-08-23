@@ -1,9 +1,9 @@
 package PriceMonitor;
 
 import DataManager.DataManager;
+import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
-import org.json.JSONObject;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,23 +43,28 @@ public class PriceMonitor {
     }
 
     // Register symbols to price monitor
-    public static void RegisterStockSymboles(JSONObject boughtStockItem) {
+    public static void RegisterStockSymboles(SharedstockitemsRecord boughtStockItem) {
         // Lock the map for multi thread safe
 
         try {
             synchronized (PriceMonitor.stockPriceMap) {
-                String symbol = boughtStockItem.getString(DataManager.SYMBOL);
-                double averageCost = boughtStockItem.getDouble(DataManager.AVERAGECOST);
-                int number = boughtStockItem.getInt(DataManager.SHARES);
-                double targetPriceNasdaq = boughtStockItem.getDouble(DataManager.OneYearTargetPrice);
+                String symbol = boughtStockItem.getSymbol();
+                double averageCost = boughtStockItem.getSharedaveragecost();
+                int number = boughtStockItem.getShares();
+                double targetPriceNasdaq = 0;
+                try {
+                    targetPriceNasdaq = boughtStockItem.getTargetprice();
+                } catch (Exception e) {
+
+                }
 
                 // Update stock mapper
-                if (PriceMonitor.stockPriceMap.containsKey(boughtStockItem.getString(DataManager.SYMBOL))) {
+                if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
                     StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(DataManager.SYMBOL));
                     item.AverageCost = averageCost;
                     item.Shares = number;
                 } else {
-                    PriceMonitor.stockPriceMap.put(boughtStockItem.getString(DataManager.SYMBOL), new StockItem(symbol, averageCost, number, targetPriceNasdaq));
+                    PriceMonitor.stockPriceMap.put(symbol, new StockItem(symbol, averageCost, number, targetPriceNasdaq));
                 }
             }
 

@@ -5,16 +5,14 @@ package JooqMap;
 
 
 import JooqMap.tables.Sharedstockitems;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.annotation.Generated;
-
 import org.jooq.Catalog;
 import org.jooq.Table;
 import org.jooq.impl.SchemaImpl;
+
+import javax.annotation.Generated;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -30,13 +28,11 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Library extends SchemaImpl {
 
-    private static final long serialVersionUID = -1027126912;
-
     /**
      * The reference instance of <code>library</code>
      */
     public static final Library LIBRARY = new Library();
-
+    private static final long serialVersionUID = -1027126912;
     /**
      * The table <code>library.SharedStockItems</code>.
      */

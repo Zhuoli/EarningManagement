@@ -1,7 +1,7 @@
 package DataManager;
 
+import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.StockItem;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -26,7 +26,7 @@ public class DataManager {
     static final public String PRICE = "Price";
     static final public String OneYearTargetPrice = "OneYearTargetNasdaq";
 
-    protected Consumer<JSONObject> stockItemRegister;
+    protected Consumer<SharedstockitemsRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
     protected DataManager()
@@ -37,7 +37,7 @@ public class DataManager {
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public static DataManager GetDataManager(Consumer<JSONObject> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
+    public static DataManager GetDataManager(Consumer<SharedstockitemsRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
             DatabaseManager manager = DatabaseManager.InitializeDatabaseManagerFromXML("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
@@ -50,7 +50,7 @@ public class DataManager {
         return null;
     }
 
-    public List<JSONObject> ReadSharedStocksFromDB()
+    public List<SharedstockitemsRecord> ReadSharedStocksFromDB()
     {
         try {
             throw new Exception("Not implemented.");

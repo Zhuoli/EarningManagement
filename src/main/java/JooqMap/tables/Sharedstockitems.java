@@ -7,19 +7,13 @@ package JooqMap.tables;
 import JooqMap.Keys;
 import JooqMap.Library;
 import JooqMap.tables.records.SharedstockitemsRecord;
+import org.jooq.*;
+import org.jooq.impl.TableImpl;
 
+import javax.annotation.Generated;
 import java.sql.Date;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.Generated;
-
-import org.jooq.Field;
-import org.jooq.Schema;
-import org.jooq.Table;
-import org.jooq.TableField;
-import org.jooq.UniqueKey;
-import org.jooq.impl.TableImpl;
 
 
 /**
@@ -35,41 +29,27 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Sharedstockitems extends TableImpl<SharedstockitemsRecord> {
 
-    private static final long serialVersionUID = 115431031;
-
     /**
      * The reference instance of <code>library.SharedStockItems</code>
      */
     public static final Sharedstockitems SHAREDSTOCKITEMS = new Sharedstockitems();
-
-    /**
-     * The class holding records for this type
-     */
-    @Override
-    public Class<SharedstockitemsRecord> getRecordType() {
-        return SharedstockitemsRecord.class;
-    }
-
+    private static final long serialVersionUID = 115431031;
     /**
      * The column <code>library.SharedStockItems.Symbol</code>.
      */
     public final TableField<SharedstockitemsRecord, String> SYMBOL = createField("Symbol", org.jooq.impl.SQLDataType.VARCHAR.length(20).nullable(false), this, "");
-
     /**
      * The column <code>library.SharedStockItems.Shares</code>.
      */
     public final TableField<SharedstockitemsRecord, Integer> SHARES = createField("Shares", org.jooq.impl.SQLDataType.INTEGER, this, "");
-
     /**
      * The column <code>library.SharedStockItems.Reportdate</code>.
      */
     public final TableField<SharedstockitemsRecord, Date> REPORTDATE = createField("Reportdate", org.jooq.impl.SQLDataType.DATE, this, "");
-
     /**
      * The column <code>library.SharedStockItems.SharedAverageCost</code>.
      */
     public final TableField<SharedstockitemsRecord, Double> SHAREDAVERAGECOST = createField("SharedAverageCost", org.jooq.impl.SQLDataType.DOUBLE.nullable(false), this, "");
-
     /**
      * The column <code>library.SharedStockItems.TargetPrice</code>. One year target price
      */
@@ -95,6 +75,14 @@ public class Sharedstockitems extends TableImpl<SharedstockitemsRecord> {
 
     private Sharedstockitems(String alias, Table<SharedstockitemsRecord> aliased, Field<?>[] parameters) {
         super(alias, null, aliased, parameters, "");
+    }
+
+    /**
+     * The class holding records for this type
+     */
+    @Override
+    public Class<SharedstockitemsRecord> getRecordType() {
+        return SharedstockitemsRecord.class;
     }
 
     /**
