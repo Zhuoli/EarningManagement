@@ -229,7 +229,8 @@ public class EmailManager {
         if (this.receiveStore == null)
             this.Authenticate();
 
-        this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
+        if (!this.receiveStore.isConnected())
+            this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
 
         Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
 
@@ -242,6 +243,9 @@ public class EmailManager {
 
             for (Message msg : messages) {
                 try {
+                    // Reopen folder if close
+                    if (!infolder.isOpen())
+                        infolder.open(Folder.READ_WRITE);
                     Address[] addresses = msg.getFrom();
 
                     // Skip the unrelated emails
@@ -264,12 +268,14 @@ public class EmailManager {
                     MonitorEmail email = new MonitorEmail(EmailManager.FOLDER, msg.getSubject(), this.username, addresses[0].toString(), content);
                     emailList.add(email);
                 } catch (Exception exc) {
-                    Logger.getGlobal().log(Level.WARNING, "Failed to receive email.", exc);
+                    Logger.getGlobal().log(Level.WARNING, "Failed to receive email from: " + emailRecipient, exc);
                 }
             }
         } finally {
-            infolder.close(false);
-            this.receiveStore.close();
+            if (infolder!=null && infolder.isOpen())
+                infolder.close(false);
+            if (this.receiveStore != null && this.receiveStore.isConnected())
+                this.receiveStore.close();
         }
         return emailList.toArray(new MonitorEmail[0]);
     }
