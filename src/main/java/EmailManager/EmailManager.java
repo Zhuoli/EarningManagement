@@ -1,11 +1,21 @@
-package ResultPublisher.EmailManager;
+package EmailManager;
 
 import com.joanzapata.utils.Strings;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.FlagTerm;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -19,16 +29,19 @@ import java.util.logging.Logger;
 public class EmailManager {
 
     private final static String FOLDER = "Inbox";
+    private static EmailManager instance;
     private static String EmailRecipient;
     private String username;
     private String password;
     private Session sendSession = null;
     private boolean isAuthenticated = false;
     private Store receiveStore = null;
+
+
     /**
      * Constructor
      */
-    public EmailManager() {
+    private EmailManager() {
     }
 
     /**
@@ -37,10 +50,51 @@ public class EmailManager {
      * @param username: Username
      * @param password: Password
      */
-    public EmailManager(String username, String password, String recipient) {
+    private EmailManager(String username, String password, String recipient) {
         this.username = username;
         this.password = password;
         EmailManager.EmailRecipient = recipient;
+    }
+
+    /**
+     * Initialize EmailMananger from XML configuration file.
+     *
+     * @param pathString : Configuration file path
+     * @return: Emailmanager
+     */
+
+    public static EmailManager GetAndInitializeEmailmanager(String pathString) {
+
+        if (EmailManager.instance != null)
+            return EmailManager.instance;
+
+
+        Path currentPath = Paths.get("./");
+        System.out.println("Currrent path: " + currentPath.toAbsolutePath());
+        Path path = Paths.get("src", "resources", pathString);
+
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS))
+            path = Paths.get(pathString);
+
+        if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            try {
+                DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                Document doc = builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
+                Element documentElement = doc.getDocumentElement();
+                Element emailsNode = (Element) documentElement.getElementsByTagName("Emails").item(0);
+
+                String emailUser = emailsNode.getElementsByTagName("User").item(0).getTextContent();
+                String emailPassoword = emailsNode.getElementsByTagName("Password").item(0).getTextContent();
+                String emailRecipient = emailsNode.getElementsByTagName("Recipient").item(0).getTextContent();
+
+                EmailManager.instance = new EmailManager(emailUser, emailPassoword, emailRecipient);
+            } catch (Exception e) {
+                Logger.getGlobal().log(Level.SEVERE, "Failed to read configuration file from " + pathString, e);
+                EmailManager.instance = new EmailManager();
+            }
+        }
+
+        return EmailManager.instance;
     }
 
     /**

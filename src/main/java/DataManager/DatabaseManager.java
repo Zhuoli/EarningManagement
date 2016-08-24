@@ -1,11 +1,8 @@
 package DataManager;
 
 import JooqMap.tables.records.SharedstockitemsRecord;
-import PriceMonitor.stock.StockItem;
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.jooq.*;
 import org.jooq.impl.DSL;
-import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -13,12 +10,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +43,7 @@ public class DatabaseManager extends DataManager{
 
     private DatabaseManager(String url, String database, String userName, String password)
     {
-        this.url = url;
+        this.url = "jdbc:mysql://" + url + "/" + database;
         this.userName = userName;
         this.password = password;
     }
@@ -95,8 +93,30 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public void WriteStockItemBackToDB(StockItem item) throws SQLException {
-        // To be implemented
+    public void WriteStockItemBackToDB(Order order) throws SQLException {
+        this.getNewQueriedStockItemsFunc.get();
+
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            Logger.getGlobal().log(Level.SEVERE, "", e);
+        }
+        // Connection is the only JDBC resource that we need
+        // PreparedStatement and ResultSet are handled by jOOQ, internally
+        try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
+            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+            Optional<Table<?>> table = this.GetTable(create, SHAREDSTOCKITEMS.getName());
+            if (!table.isPresent()) {
+                create.createTable(SHAREDSTOCKITEMS).columns(SHAREDSTOCKITEMS.fields()).execute();
+            }
+            Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
+
+        }
+
+        // For the sake of this tutorial, let's keep exception handling simple
+        catch (Exception e) {
+            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package ResultPublisher.EmailManager;
+package EmailManager;
 
 /**
  * Created by zhuoli on 7/10/16.
