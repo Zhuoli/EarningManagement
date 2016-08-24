@@ -132,7 +132,7 @@ public class ResultPublisher {
 
                 System.out.println(reportBuilder.toString());
 
-                MonitorEmail[] emails = this.emailUser.ReceiveUnreadEmails();
+                MonitorEmail[] emails = this.emailUser.ReceiveEmailsFrom(EmailManager.getEmailRecipient(), true);
 
                 if (emails != null && emails.length > 0) {
                     this.emailUser.Send(EmailManager.getEmailRecipient(), "Stock Report", reportBuilder.toString());

@@ -35,9 +35,7 @@ import static JooqMap.Tables.SHAREDSTOCKITEMS;
 public class DatabaseManager extends DataManager{
 
 
-    MysqlDataSource dataSource;
     private String url;
-    private String databaseString;
     private String userName;
     private String password;
 
@@ -48,7 +46,6 @@ public class DatabaseManager extends DataManager{
     private DatabaseManager(String url, String database, String userName, String password)
     {
         this.url = url;
-        this.databaseString = database;
         this.userName = userName;
         this.password = password;
     }
@@ -129,50 +126,6 @@ public class DatabaseManager extends DataManager{
             return new LinkedList<>();
         }
     }
-
-    /**
-     * Read stocks from CSV file.
-     * @return stock item array.
-     * @throws IOException
-     */
-    public List<JSONObject> ReadStockDatabase() throws SQLException {
-
-        LinkedList<JSONObject> jsonObjectList = new LinkedList<>();
-
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = dataSource.getConnection();
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT * FROM StockItem");
-            while (rs.next()) {
-                String symbol = rs.getString(DatabaseManager.SYMBOL);
-                double price = rs.getDouble(DatabaseManager.AVERAGECOST);
-                int number = rs.getInt(DatabaseManager.SHARES);
-                double oneYearTargetPrice = rs.getDouble(DatabaseManager.OneYearTargetPrice);
-                java.sql.Date datetime = rs.getDate(DatabaseManager.EARNING_REPORT_DATETIME);
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put(DataManager.SYMBOL, symbol).put(DataManager.AVERAGECOST, price).put(DataManager.SHARES, number).put(DatabaseManager.OneYearTargetPrice, oneYearTargetPrice).put(DataManager.EARNING_REPORT_DATETIME, datetime);
-                jsonObjectList.add(jsonObject);
-
-            }
-        } catch (SQLException e) {
-            throw e;
-        } finally {
-            try {
-                stmt.close();
-                conn.close();
-                rs.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        return jsonObjectList;
-    }
-
-
     public Optional<Table<?>> GetTable(DSLContext create, String tableName) {
         return create.meta().getTables().stream().filter(p -> p.getName().equals(tableName)).findFirst();
     }

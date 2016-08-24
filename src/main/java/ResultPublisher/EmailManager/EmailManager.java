@@ -163,11 +163,13 @@ public class EmailManager {
     }
 
     /**
-     * ReceiveUnreadEmails emails for the given folder with given From.
-     * @return
+     * ReceiveEmailsFrom emails for the given folder with given From.
+     * @param  emailRecipient from address.
+     * @param isUnreadOnly if only fetch new arrived email.
+     * @return emails
      * @throws MessagingException
      */
-    public MonitorEmail[] ReceiveUnreadEmails() throws MessagingException {
+    public MonitorEmail[] ReceiveEmailsFrom(String emailRecipient, boolean isUnreadOnly) throws MessagingException {
         List<MonitorEmail> emailList = new LinkedList<>();
 
         if (this.receiveStore == null)
@@ -182,14 +184,14 @@ public class EmailManager {
             infolder.open(Folder.READ_WRITE);
 
             /*  Get the messages which is unread in the Inbox*/
-            Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+            Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), isUnreadOnly));
 
             for (Message msg : messages) {
                 try {
                     Address[] addresses = msg.getFrom();
 
                     // Skip the unrelated emails
-                    if (!addresses[0].toString().toLowerCase().contains(EmailManager.getEmailRecipient())) {
+                    if (!addresses[0].toString().toLowerCase().contains(emailRecipient)) {
                         continue;
                     }
                     String content = "";
