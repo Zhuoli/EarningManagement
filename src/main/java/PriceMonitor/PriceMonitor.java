@@ -1,6 +1,7 @@
 package PriceMonitor;
 
 import DataManager.DataManager;
+import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
@@ -60,7 +61,7 @@ public class PriceMonitor {
 
                 // Update stock mapper
                 if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
-                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(DataManager.SYMBOL));
+                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Sharedstockitems.SHAREDSTOCKITEMS.SYMBOL));
                     item.AverageCost = averageCost;
                     item.Shares = number;
                 } else {

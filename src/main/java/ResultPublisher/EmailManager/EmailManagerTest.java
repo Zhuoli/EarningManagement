@@ -18,7 +18,7 @@ public class EmailManagerTest {
 
     @Test
     public void testReceive() throws Exception {
-        MonitorEmail[] emails = this.emailManager.ReceiveUnreadEmails();
+        MonitorEmail[] emails = this.emailManager.ReceiveEmailsFrom(EmailManager.getEmailRecipient(), true);
         Assert.assertTrue(emails != null && emails.length > 0);
     }
 

@@ -19,13 +19,6 @@ import java.util.logging.Logger;
 public class DataManager {
 
 
-    static final public String SYMBOL = "Symbol";
-    static final public String AVERAGECOST = "AverageCost";
-    static final public String EARNING_REPORT_DATETIME = "EarningReportDatetime";
-    static final public String SHARES = "Shares";
-    static final public String PRICE = "Price";
-    static final public String OneYearTargetPrice = "OneYearTargetNasdaq";
-
     protected Consumer<SharedstockitemsRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
