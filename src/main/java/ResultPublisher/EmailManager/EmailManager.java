@@ -165,11 +165,11 @@ public class EmailManager {
     /**
      * ReceiveEmailsFrom emails for the given folder with given From.
      * @param  emailRecipient from address.
-     * @param isUnreadOnly if only fetch new arrived email.
+     * @param isSeen if only fetch seen email.
      * @return emails
      * @throws MessagingException
      */
-    public MonitorEmail[] ReceiveEmailsFrom(String emailRecipient, boolean isUnreadOnly) throws MessagingException {
+    public MonitorEmail[] ReceiveEmailsFrom(String emailRecipient, boolean isSeen) throws MessagingException {
         List<MonitorEmail> emailList = new LinkedList<>();
 
         if (this.receiveStore == null)
@@ -184,7 +184,7 @@ public class EmailManager {
             infolder.open(Folder.READ_WRITE);
 
             /*  Get the messages which is unread in the Inbox*/
-            Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), isUnreadOnly));
+            Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), isSeen));
 
             for (Message msg : messages) {
                 try {
