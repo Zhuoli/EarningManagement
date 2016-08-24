@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static JooqMap.Tables.SHAREDSTOCKITEMS;
 
@@ -98,47 +99,16 @@ public class DatabaseManager extends DataManager{
 
     @Override
     public void WriteStockItemBackToDB(StockItem item) throws SQLException {
-//        String updateTableSQL = Strings.format("UPDATE StockItem SET {1} = {average}, {2} = {reportDate}, {3}={shares}, {4}={price}, {5}={targetPrice} WHERE {0} = {symbol}").
-//                with("0", DataManager.SYMBOL).with("symbol", item.Symbol).
-//                with("1", DataManager.AVERAGECOST).with("average", item.AverageCost).
-//                with("2", DataManager.EARNING_REPORT_DATETIME).with("reportDate", item.getEarningReportDate().orElseGet(() -> {
-//            return LocalDate.now();
-//        })).
-//                with("3", DataManager.SHARES).with("shares", item.Shares).
-//                with("4", DataManager.PRICE).with("price", item.Price).
-//                with("5", DataManager.OneYearTargetPrice).with("targetPrice", item.OneYearTargetNasdaq).
-//                build();
-//
-//        Connection conn = null;
-//        Statement stmt = null;
-//        ResultSet rs = null;
-//        try {
-//            conn = dataSource.getConnection();
-//            stmt = conn.createStatement();
-//            rs = stmt.executeQuery(updateTableSQL);
-//
-//        } catch (SQLException e) {
-//            throw e;
-//        } finally {
-//            try {
-//                stmt.close();
-//                conn.close();
-//                rs.close();
-//            } catch (SQLException e) {
-//                e.printStackTrace();
-//            }
-//        }
+        // To be implemented
     }
 
     @Override
     public List<SharedstockitemsRecord> ReadSharedStocksFromDB() {
-        LinkedList<SharedstockitemsRecord> sharedstockitemses = new LinkedList<>();
-
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             Logger.getGlobal().log(Level.SEVERE, "", e);
-            return sharedstockitemses;
+            return new LinkedList<>();
         }
         // Connection is the only JDBC resource that we need
         // PreparedStatement and ResultSet are handled by jOOQ, internally
@@ -150,22 +120,14 @@ public class DatabaseManager extends DataManager{
             }
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
-            for (Record r : result) {
-                String symbol = r.getValue(SHAREDSTOCKITEMS.SYMBOL);
-                Double averageCost = r.getValue(SHAREDSTOCKITEMS.SHAREDAVERAGECOST);
-                int shares = r.getValue(SHAREDSTOCKITEMS.SHARES);
-
-                sharedstockitemses.add((SharedstockitemsRecord) r);
-
-                System.out.println("Symbol: " + symbol + " AverageCost: " + averageCost + " Shares: " + shares);
-            }
+            return result.stream().map(p -> (SharedstockitemsRecord) p).collect(Collectors.toList());
         }
 
         // For the sake of this tutorial, let's keep exception handling simple
         catch (Exception e) {
-            e.printStackTrace();
+            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
+            return new LinkedList<>();
         }
-        return sharedstockitemses;
     }
 
     /**
