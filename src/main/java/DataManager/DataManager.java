@@ -55,7 +55,7 @@ public class DataManager {
         return new LinkedList<>();
     }
 
-    public void WriteStockItemBackToDB(Order order) throws SQLException {
+    public void WriteStockItemBackToDB(Order[] orders){
 
         try {
             throw new Exception("Not implemented.");
@@ -71,17 +71,10 @@ public class DataManager {
             while (true) {
                 // Register stocks queried from database
                 this.ReadSharedStocksFromDB().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
-                Order[] newOrders = this.Help();
+                Order[] newOrders = this.CheckForNewOrdersPlaced();
 
+                this.WriteStockItemBackToDB(newOrders);
 
-                // Check email recipient to update stock database
-                Arrays.stream(newOrders).forEach(order -> {
-                    try {
-                        this.WriteStockItemBackToDB(order);
-                    } catch (java.sql.SQLException exc) {
-                        Logger.getGlobal().log(Level.SEVERE, "SQL ERROR on writing back", exc);
-                    }
-                });
                 Thread.sleep(5 * 1000);
             }
         } catch (Exception exc) {
@@ -89,24 +82,57 @@ public class DataManager {
         }
     }
 
-    private Order[] Help() {
+    /**
+     * Query email box to see if has new stock order been placed.
+     * @return orders.
+     */
+    private static final String OrderToBuyString = "Your market order to buy";
+    private static final String OrderToSellString = "Your market order to sell";
+
+    private Order[] CheckForNewOrdersPlaced() {
         LinkedList<Order> orders = new LinkedList<>();
         try {
             EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
-            MonitorEmail[] robinhoodEmails = emailManager.ReceiveEmailsFrom("zhuoliseattle@gmail.com", false);
+            MonitorEmail[] robinhoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
             robinhoodEmails = Arrays.stream(robinhoodEmails).filter(email -> email.Subject.contains("Your order has been executed")).toArray(size -> new MonitorEmail[size]);
+
+            // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
+                OrderType orderType = OrderType.UNKNOWN;
 
-                int index = email.Content.indexOf("Your market order to buy");
-                int endindex = email.Content.indexOf("Your trade confirmation will be");
-                String paragraph = email.Content.substring(index, endindex);
+                String paragraph = email.Content;
+                int shares = 0;
 
-                String sharesString = paragraph.substring("Your market order to buy".length(), paragraph.indexOf(" shares of ")).trim();
-                int shares = Integer.parseInt(sharesString);
-                String symbol = paragraph.substring(paragraph.indexOf("shares of") + "shares of".length(), paragraph.indexOf(" was executed at")).trim();
+                // Buying order
+                if (email.Content.contains(DataManager.OrderToBuyString))
+                {
+                    int index = email.Content.indexOf(DataManager.OrderToBuyString);
+                    orderType = OrderType.BUY;
+                    String sharesString = paragraph.substring(index + DataManager.OrderToBuyString.length(), paragraph.indexOf(" share")).trim();
+                    shares = Integer.parseInt(sharesString);
+                }
+
+                // Selling order
+                else if(email.Content.contains(DataManager.OrderToSellString))
+                {
+                    int index = email.Content.indexOf(DataManager.OrderToSellString);
+                    orderType = OrderType.SELL;
+                    String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
+                    shares = Integer.parseInt(sharesString);
+                }
+                int endindex = paragraph.indexOf("Your trade confirmation will be");
+
+                paragraph = email.Content.substring(0, endindex);
+
+                int symbolIndex = paragraph.indexOf("shares of") + "shares of".length();
+                if (symbolIndex < "shares of".length())
+                {
+                    symbolIndex = paragraph.indexOf("share of") + "share of".length();
+                }
+                String symbol = paragraph.substring(symbolIndex, paragraph.indexOf(paragraph.indexOf(" was executed at"))).trim();
                 paragraph = paragraph.substring(paragraph.indexOf("of $"));
                 double price = Double.parseDouble(paragraph.substring(4, paragraph.indexOf("on")));
-                orders.add(new Order(symbol, shares, price));
+                orders.add(new Order(symbol, shares, price, orderType));
                 System.out.println(paragraph);
             }
             return orders.toArray(new Order[0]);

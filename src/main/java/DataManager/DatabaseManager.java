@@ -1,5 +1,6 @@
 package DataManager;
 
+import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -17,9 +18,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -93,8 +92,12 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public void WriteStockItemBackToDB(Order order) throws SQLException {
+    public void WriteStockItemBackToDB(Order[] orders){
         this.getNewQueriedStockItemsFunc.get();
+
+        // Order array to hashmap
+        HashMap<String, Order> orderMap = new HashMap<String, Order>();
+        Arrays.stream(orders).forEach(order -> orderMap.put(order.Symbol, order));
 
         try {
             Class.forName("com.mysql.jdbc.Driver");
@@ -111,6 +114,25 @@ public class DatabaseManager extends DataManager{
             }
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
+            for (Record record : result)
+            {
+
+                SharedstockitemsRecord sharedstockitemsRecord = (SharedstockitemsRecord) record;
+                String symbol = sharedstockitemsRecord.get(Sharedstockitems.SHAREDSTOCKITEMS.SYMBOL);
+
+                // If in table, update row
+                if (orderMap.containsKey(symbol))
+                {
+                }
+                else
+                {
+                    // Else, insert this row
+                    create.insertInto(SHAREDSTOCKITEMS,
+                            SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
+                            .values(sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SYMBOL), sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SHARES), sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SHAREDAVERAGECOST));
+                }
+
+            }
         }
 
         // For the sake of this tutorial, let's keep exception handling simple
