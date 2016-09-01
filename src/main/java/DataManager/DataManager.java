@@ -4,6 +4,7 @@ import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.StockItem;
+import Utility.RetryManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -98,48 +99,56 @@ public class DataManager {
 
             // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
-                OrderType orderType = OrderType.UNKNOWN;
-
-                String paragraph = email.Content;
-                int shares = 0;
-
-                // Buying order
-                if (email.Content.contains(DataManager.OrderToBuyString))
-                {
-                    int index = email.Content.indexOf(DataManager.OrderToBuyString);
-                    orderType = OrderType.BUY;
-                    String sharesString = paragraph.substring(index + DataManager.OrderToBuyString.length(), paragraph.indexOf(" share")).trim();
-                    shares = Integer.parseInt(sharesString);
+                Order order = new RetryManager<MonitorEmail, Order>((e) -> this.ParseEmail(e)).Execute(email);
+                if (order != null){
+                    orders.add(order);
                 }
-
-                // Selling order
-                else if(email.Content.contains(DataManager.OrderToSellString))
-                {
-                    int index = email.Content.indexOf(DataManager.OrderToSellString);
-                    orderType = OrderType.SELL;
-                    String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
-                    shares = Integer.parseInt(sharesString);
-                }
-                int endindex = paragraph.indexOf("Your trade confirmation will be");
-
-                paragraph = email.Content.substring(0, endindex);
-
-                int symbolIndex = paragraph.indexOf("shares of") + "shares of".length();
-                if (symbolIndex < "shares of".length())
-                {
-                    symbolIndex = paragraph.indexOf("share of") + "share of".length();
-                }
-                String symbol = paragraph.substring(symbolIndex, paragraph.indexOf(paragraph.indexOf(" was executed at"))).trim();
-                paragraph = paragraph.substring(paragraph.indexOf("of $"));
-                double price = Double.parseDouble(paragraph.substring(4, paragraph.indexOf("on")));
-                orders.add(new Order(symbol, shares, price, orderType));
-                System.out.println(paragraph);
             }
             return orders.toArray(new Order[0]);
         } catch (Exception e) {
             Logger.getGlobal().log(Level.SEVERE, "Error on querrying email", e);
         }
-
         return new Order[0];
+    }
+
+    public Order ParseEmail(MonitorEmail email)
+    {
+        OrderType orderType = OrderType.UNKNOWN;
+
+        String paragraph = email.Content;
+        int shares = 0;
+
+        // Buying order
+        if (email.Content.contains(DataManager.OrderToBuyString))
+        {
+            int index = email.Content.indexOf(DataManager.OrderToBuyString);
+            orderType = OrderType.BUY;
+            String sharesString = paragraph.substring(index + DataManager.OrderToBuyString.length(), paragraph.indexOf(" share")).trim();
+            shares = Integer.parseInt(sharesString);
+        }
+
+        // Selling order
+        else if(email.Content.contains(DataManager.OrderToSellString))
+        {
+            int index = email.Content.indexOf(DataManager.OrderToSellString);
+            orderType = OrderType.SELL;
+            String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
+            shares = Integer.parseInt(sharesString);
+        }
+
+        // Getting Symbol
+        int endindex = paragraph.indexOf("Your trade confirmation will be");
+
+        paragraph = email.Content.substring(0, endindex);
+
+        int symbolIndex = paragraph.indexOf("was executed at");
+        String[] words = paragraph.substring(0, symbolIndex).trim().split(" ");
+        String symbol = words[words.length-1];
+
+
+        // Get price
+        paragraph = paragraph.substring(paragraph.indexOf("of $"));
+        double price = Double.parseDouble(paragraph.substring(4, paragraph.indexOf("on")).trim());
+        return new Order(symbol, shares, price, orderType);
     }
 }
