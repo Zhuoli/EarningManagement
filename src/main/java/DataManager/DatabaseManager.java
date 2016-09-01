@@ -4,6 +4,7 @@ import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
+import org.junit.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -27,6 +28,7 @@ import static JooqMap.Tables.SHAREDSTOCKITEMS;
 
 
 /**
+ * MYSql Connector and Executor.
  * Created by zhuolil on 8/17/16.
  */
 public class DatabaseManager extends DataManager{
@@ -95,15 +97,12 @@ public class DatabaseManager extends DataManager{
     public void WriteStockItemBackToDB(Order[] orders){
         this.getNewQueriedStockItemsFunc.get();
 
-        // Order array to hashmap
-        HashMap<String, Order> orderMap = new HashMap<String, Order>();
-        Arrays.stream(orders).forEach(order -> orderMap.put(order.Symbol, order));
-
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             Logger.getGlobal().log(Level.SEVERE, "", e);
         }
+
         // Connection is the only JDBC resource that we need
         // PreparedStatement and ResultSet are handled by jOOQ, internally
         try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
@@ -112,16 +111,19 @@ public class DatabaseManager extends DataManager{
             if (!table.isPresent()) {
                 create.createTable(SHAREDSTOCKITEMS).columns(SHAREDSTOCKITEMS.fields()).execute();
             }
+
+            // Database query result
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
-            for (Record record : result)
+            // Map query result to StockItems
+            HashMap<String, SharedstockitemsRecord> stockMap = new HashMap<String, SharedstockitemsRecord>();
+            result.stream().map(r -> (SharedstockitemsRecord)r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
+
+            // Check each new email order
+            for (Order oder : orders)
             {
-
-                SharedstockitemsRecord sharedstockitemsRecord = (SharedstockitemsRecord) record;
-                String symbol = sharedstockitemsRecord.get(Sharedstockitems.SHAREDSTOCKITEMS.SYMBOL);
-
                 // If in table, update row
-                if (orderMap.containsKey(symbol))
+                if (stockMap.containsKey(oder.Symbol))
                 {
                 }
                 else
@@ -129,11 +131,15 @@ public class DatabaseManager extends DataManager{
                     // Else, insert this row
                     create.insertInto(SHAREDSTOCKITEMS,
                             SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
-                            .values(sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SYMBOL), sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SHARES), sharedstockitemsRecord.get(SHAREDSTOCKITEMS.SHAREDAVERAGECOST));
+                            .values(oder.Symbol, oder.Shares, oder.Price).execute();
+
+                    System.out.println("New row inserted " + oder);
                 }
 
             }
-        }
+            }
+
+
 
         // For the sake of this tutorial, let's keep exception handling simple
         catch (Exception e) {
