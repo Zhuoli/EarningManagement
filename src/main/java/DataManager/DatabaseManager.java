@@ -116,45 +116,46 @@ public class DatabaseManager extends DataManager{
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
             // Map query result to StockItems
-            HashMap<String, SharedstockitemsRecord> stockMap = new HashMap<String, SharedstockitemsRecord>();
-            result.stream().map(r -> (SharedstockitemsRecord)r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
+            HashMap<String, SharedstockitemsRecord> stockMap = new HashMap<>();
+            result.stream().map(r -> (SharedstockitemsRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
 
             // Check each new email order
-            for (Order oder : orders)
-            {
-                // If in table, update row
-                if (stockMap.containsKey(oder.Symbol))
-                {
-                    SharedstockitemsRecord sharedStock = stockMap.get(orders);
-                    int shares = sharedStock.getShares();
-                    double aveCost = sharedStock.getSharedaveragecost();
+            for (Order oder : orders) {
+                switch (oder.type) {
+                    case BUY:
+                        // If in table, update row
+                        if (stockMap.containsKey(oder.Symbol)) {
+                            SharedstockitemsRecord sharedStock = stockMap.get(orders);
+                            int shares = sharedStock.getShares();
+                            double aveCost = sharedStock.getSharedaveragecost();
 
-                    double sum = shares * aveCost + oder.Price * oder.Shares;
-                    int newShares = shares + oder.Shares;
-                    double newAveCist = sum / newShares;
+                            double sum = shares * aveCost + oder.Price * oder.Shares;
+                            int newShares = shares + oder.Shares;
+                            double newAveCist = sum / newShares;
 
-                    create.update(SHAREDSTOCKITEMS)
-                            .set(SHAREDSTOCKITEMS.SHAREDAVERAGECOST, newAveCist)
-                            .set(SHAREDSTOCKITEMS.SHARES, newShares)
-                            .where(SHAREDSTOCKITEMS.SYMBOL.equal(oder.Symbol))
-                            .execute();
+                            create.update(SHAREDSTOCKITEMS)
+                                    .set(SHAREDSTOCKITEMS.SHAREDAVERAGECOST, newAveCist)
+                                    .set(SHAREDSTOCKITEMS.SHARES, newShares)
+                                    .where(SHAREDSTOCKITEMS.SYMBOL.equal(oder.Symbol))
+                                    .execute();
 
+                        } else {
+                            // Else, insert this row
+                            create.insertInto(SHAREDSTOCKITEMS,
+                                    SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
+                                    .values(oder.Symbol, oder.Shares, oder.Price).execute();
+
+                            System.out.println("New row inserted " + oder);
+                        }
+                        break;
+                    case SELL:
+
+                        // ** TO DO **
+                        // Calculate the profit and notify resultPublisher
+                        break;
                 }
-                else
-                {
-                    // Else, insert this row
-                    create.insertInto(SHAREDSTOCKITEMS,
-                            SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
-                            .values(oder.Symbol, oder.Shares, oder.Price).execute();
-
-                    System.out.println("New row inserted " + oder);
-                }
-
             }
-            }
-
-
-
+        }
         // For the sake of this tutorial, let's keep exception handling simple
         catch (Exception e) {
             Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);

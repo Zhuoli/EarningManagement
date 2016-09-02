@@ -5,8 +5,7 @@ package DataManager;
  */
 public enum OrderType {
     BUY("BUY"),
-    SELL("SELL"),
-    UNKNOWN("UNKNOWN");
+    SELL("SELL");
 
     private final String type;
 
