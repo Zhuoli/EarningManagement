@@ -99,7 +99,7 @@ public class DataManager {
 
             // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
-                Order order = new RetryManager<MonitorEmail, Order>((e) -> this.ParseEmail(e)).Execute(email);
+                Order order = new RetryManager<>(this::ParseEmail).Execute(email);
                 if (order != null){
                     orders.add(order);
                 }
@@ -111,12 +111,10 @@ public class DataManager {
         return new Order[0];
     }
 
-    public Order ParseEmail(MonitorEmail email)
-    {
-        OrderType orderType = OrderType.UNKNOWN;
-
+    public Order ParseEmail(MonitorEmail email) {
         String paragraph = email.Content;
         int shares = 0;
+        OrderType orderType = OrderType.BUY;
 
         // Buying order
         if (email.Content.contains(DataManager.OrderToBuyString))
@@ -134,6 +132,10 @@ public class DataManager {
             orderType = OrderType.SELL;
             String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
             shares = Integer.parseInt(sharesString);
+        }
+        else{
+            Logger.getGlobal().warning("Failed to parse order type : " + email.Content);
+            return null;
         }
 
         // Getting Symbol
