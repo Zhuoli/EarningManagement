@@ -125,6 +125,20 @@ public class DatabaseManager extends DataManager{
                 // If in table, update row
                 if (stockMap.containsKey(oder.Symbol))
                 {
+                    SharedstockitemsRecord sharedStock = stockMap.get(orders);
+                    int shares = sharedStock.getShares();
+                    double aveCost = sharedStock.getSharedaveragecost();
+
+                    double sum = shares * aveCost + oder.Price * oder.Shares;
+                    int newShares = shares + oder.Shares;
+                    double newAveCist = sum / newShares;
+
+                    create.update(SHAREDSTOCKITEMS)
+                            .set(SHAREDSTOCKITEMS.SHAREDAVERAGECOST, newAveCist)
+                            .set(SHAREDSTOCKITEMS.SHARES, newShares)
+                            .where(SHAREDSTOCKITEMS.SYMBOL.equal(oder.Symbol))
+                            .execute();
+
                 }
                 else
                 {
