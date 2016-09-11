@@ -1,6 +1,5 @@
 package DataManager;
 
-import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -120,40 +119,32 @@ public class DatabaseManager extends DataManager{
             result.stream().map(r -> (SharedstockitemsRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
 
             // Check each new email order
-            for (Order oder : orders) {
-                switch (oder.type) {
-                    case BUY:
-                        // If in table, update row
-                        if (stockMap.containsKey(oder.Symbol)) {
-                            SharedstockitemsRecord sharedStock = stockMap.get(orders);
-                            int shares = sharedStock.getShares();
-                            double aveCost = sharedStock.getSharedaveragecost();
+            for (Order order : orders) {
+                // If in table, update row
+                if (stockMap.containsKey(order.Symbol)) {
+                    SharedstockitemsRecord sharedStock = stockMap.get(orders);
+                    sharedStock = this.UpdateStockShares(sharedStock, order);
 
-                            double sum = shares * aveCost + oder.Price * oder.Shares;
-                            int newShares = shares + oder.Shares;
-                            double newAveCist = sum / newShares;
+                    // Delete shares
+                    if (sharedStock.getShares() == 0)
+                    {
+                        // Deletes this record from the database, based on the value of the primary key or main unique key.
+                        sharedStock.delete();
+                    }
 
-                            create.update(SHAREDSTOCKITEMS)
-                                    .set(SHAREDSTOCKITEMS.SHAREDAVERAGECOST, newAveCist)
-                                    .set(SHAREDSTOCKITEMS.SHARES, newShares)
-                                    .where(SHAREDSTOCKITEMS.SYMBOL.equal(oder.Symbol))
-                                    .execute();
+                    // Store this record back to the database using an UPDATE statement.
+                    // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
+                    sharedStock.update();
 
-                        } else {
-                            // Else, insert this row
-                            create.insertInto(SHAREDSTOCKITEMS,
-                                    SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
-                                    .values(oder.Symbol, oder.Shares, oder.Price).execute();
+                } else {
+                    // Else, insert this row
+                    create.insertInto(SHAREDSTOCKITEMS,
+                            SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
+                            .values(order.Symbol, order.Shares, order.Price).execute();
 
-                            System.out.println("New row inserted " + oder);
-                        }
-                        break;
-                    case SELL:
-
-                        // ** TO DO **
-                        // Calculate the profit and notify resultPublisher
-                        break;
+                    System.out.println("New row inserted " + order);
                 }
+                break;
             }
         }
         // For the sake of this tutorial, let's keep exception handling simple
@@ -162,11 +153,20 @@ public class DatabaseManager extends DataManager{
         }
     }
 
+    /**
+     * Update shared stock database row, if new bought of this stock Symbol, insert new row,
+     * else update the existing row, delete this row if it's close out.
+     * @param sharedStock
+     * @param newOrder
+     * @return
+     */
     private SharedstockitemsRecord UpdateStockShares(SharedstockitemsRecord sharedStock, Order newOrder)
     {
         Assert.assertNotNull(sharedStock);
         Assert.assertNotNull(newOrder);
-        Assert.assertTrue(newOrder.type == OrderType.BUY || newOrder.type == OrderType.SELL);
+
+        // Order type should always be set
+        Assert.assertTrue(newOrder.type != OrderType.UNKNOWN);
 
         if(newOrder.type == OrderType.SELL)
             Assert.assertTrue("Existing shares should not less than the selling order", sharedStock.getShares() >= newOrder.Shares);
@@ -178,22 +178,27 @@ public class DatabaseManager extends DataManager{
         double aveCost = sharedStock.getSharedaveragecost();
 
         // Calculate the total cost after the new order
-        double sum = shares * aveCost + newOrder.Price * newOrder.Shares;
+        double newSum = shares * aveCost;
+        int newShares = shares;
+        if (newOrder.type == OrderType.BUY) {
+            newSum += newOrder.Price * newOrder.Shares;
+            newShares += newOrder.Shares;
+        }
+        else {
+            newSum -= newOrder.Price * newOrder.Shares;
+            newShares -= newOrder.Shares;
+        }
 
-        // Update the number of shares after order
-        int newShares = shares + newOrder.Shares;
+        // Divisor check
+        if (newShares == 0)
+        {
+            sharedStock.setShares(0);
+            return sharedStock;
+        }
 
         // Calculate the new average cost
-        double newAveCost = sum / newShares;
+        double newAveCost = newSum / newShares;
 
-        switch (newOrder.type){
-            case BUY:
-                break;
-            case SELL:
-                break;
-            default:
-                Assert.assertTrue("Order type not set.", false);
-        }
         sharedStock.setShares(newShares);
         sharedStock.setSharedaveragecost(newAveCost);
         return sharedStock;
