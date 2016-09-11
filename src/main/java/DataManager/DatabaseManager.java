@@ -162,6 +162,43 @@ public class DatabaseManager extends DataManager{
         }
     }
 
+    private SharedstockitemsRecord UpdateStockShares(SharedstockitemsRecord sharedStock, Order newOrder)
+    {
+        Assert.assertNotNull(sharedStock);
+        Assert.assertNotNull(newOrder);
+        Assert.assertTrue(newOrder.type == OrderType.BUY || newOrder.type == OrderType.SELL);
+
+        if(newOrder.type == OrderType.SELL)
+            Assert.assertTrue("Existing shares should not less than the selling order", sharedStock.getShares() >= newOrder.Shares);
+
+        // Get the number of shares
+        int shares = sharedStock.getShares();
+
+        // Get average cost of each share
+        double aveCost = sharedStock.getSharedaveragecost();
+
+        // Calculate the total cost after the new order
+        double sum = shares * aveCost + newOrder.Price * newOrder.Shares;
+
+        // Update the number of shares after order
+        int newShares = shares + newOrder.Shares;
+
+        // Calculate the new average cost
+        double newAveCost = sum / newShares;
+
+        switch (newOrder.type){
+            case BUY:
+                break;
+            case SELL:
+                break;
+            default:
+                Assert.assertTrue("Order type not set.", false);
+        }
+        sharedStock.setShares(newShares);
+        sharedStock.setSharedaveragecost(newAveCost);
+        return sharedStock;
+    }
+
     @Override
     public List<SharedstockitemsRecord> ReadSharedStocksFromDB() {
         try {
