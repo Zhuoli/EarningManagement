@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
 /**
+ * Stock master.
  * Created by zhuoli on 6/23/16.
  */
 public class StockMaster {

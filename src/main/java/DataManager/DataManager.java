@@ -35,7 +35,7 @@ public class DataManager {
      */
     public static DataManager GetDataManager(Consumer<SharedstockitemsRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
-            DatabaseManager manager = DatabaseManager.InitializeDatabaseManagerFromXML("resourceConfig.xml").Authenticate();
+            DatabaseManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
             return manager;
@@ -46,7 +46,11 @@ public class DataManager {
         return null;
     }
 
-    public List<SharedstockitemsRecord> ReadSharedStocksFromDB()
+    /**
+     * To be override.
+     * @return
+     */
+    public List<SharedstockitemsRecord> ReadSharedStocks()
     {
         try {
             throw new Exception("Not implemented.");
@@ -56,7 +60,11 @@ public class DataManager {
         return new LinkedList<>();
     }
 
-    public void WriteStockItemBackToDB(Order[] orders){
+    /**
+     * To be override.
+     * @param orders
+     */
+    public void WriteSharedStocks(Order[] orders){
 
         try {
             throw new Exception("Not implemented.");
@@ -71,10 +79,10 @@ public class DataManager {
         try {
             while (true) {
                 // Register stocks queried from database
-                this.ReadSharedStocksFromDB().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
+                this.ReadSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
                 Order[] newOrders = this.CheckForNewOrdersPlaced();
 
-                this.WriteStockItemBackToDB(newOrders);
+                this.WriteSharedStocks(newOrders);
 
                 Thread.sleep(5 * 1000);
             }

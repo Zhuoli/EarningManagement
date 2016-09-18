@@ -50,7 +50,9 @@ public class ResultPublisher {
         return this;
     }
 
-    // Result publisher
+    /**
+     * Entry of result publisher thread.
+     */
     public void Start() {
         try
         {

@@ -18,7 +18,10 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -37,20 +40,6 @@ public class DatabaseManager extends DataManager{
     private String userName;
     private String password;
 
-    private DatabaseManager() {
-
-    }
-
-    private DatabaseManager(String url, String database, String userName, String password)
-    {
-        this.url = "jdbc:mysql://" + url + "/" + database;
-        this.userName = userName;
-        this.password = password;
-    }
-
-    public static void main(String[] args) {
-
-    }
 
     /**
      * Initialize EmailMananger from XML configuration file.
@@ -58,7 +47,7 @@ public class DatabaseManager extends DataManager{
      * @param pathString : Configuration file path
      * @return: Emailmanager
      */
-    public static DatabaseManager InitializeDatabaseManagerFromXML(String pathString) {
+    public static DatabaseManager GetDatabaseManagerInstance(String pathString) {
         Path currentPath = Paths.get("./");
         System.out.println("Currrent path: " + currentPath.toAbsolutePath());
         Path path = Paths.get("src", "resources", pathString);
@@ -68,6 +57,8 @@ public class DatabaseManager extends DataManager{
 
         if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             try {
+
+                // Create XML object and read values from the given path
                 DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
                 Document doc = builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
                 Element documentElement = doc.getDocumentElement();
@@ -92,8 +83,36 @@ public class DatabaseManager extends DataManager{
         return this;
     }
 
+    private DatabaseManager() {
+        // Do nothing
+    }
+
+    /**
+     * Initialize DatabaseManager with the given Server Address and credential.
+     * @param dbUrl
+     * @param database
+     * @param userName
+     * @param password
+     */
+    private DatabaseManager(String dbUrl, String database, String userName, String password)
+    {
+        Assert.assertNotNull(dbUrl);
+        Assert.assertNotNull(database);
+        Assert.assertNotNull(userName);
+        Assert.assertNotNull(password);
+
+        this.url = "jdbc:mysql://" + url + "/" + database;
+        this.userName = userName;
+        this.password = password;
+    }
+
+    public static void main(String[] args) {
+
+    }
+
+
     @Override
-    public void WriteStockItemBackToDB(Order[] orders){
+    public void WriteSharedStocks(Order[] orders){
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -205,7 +224,7 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public List<SharedstockitemsRecord> ReadSharedStocksFromDB() {
+    public List<SharedstockitemsRecord> ReadSharedStocks() {
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {

@@ -1,6 +1,7 @@
 package EmailManager;
 
 /**
+ * Represents an email object.
  * Created by zhuoli on 7/10/16.
  */
 public class MonitorEmail {

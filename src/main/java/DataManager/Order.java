@@ -5,14 +5,33 @@ package DataManager;
  */
 public class Order {
 
+    /**
+     * Stock Symbol
+     */
     public String Symbol;
 
+    /**
+     * Numbers of shares.
+     */
     public int Shares;
 
+    /**
+     * Order price.
+     */
     public Double Price;
 
+    /**
+     * Is this order Buying or Selling.
+     */
     public OrderType type;
 
+    /**
+     * Constructor.
+     * @param symbol
+     * @param shares
+     * @param price
+     * @param type
+     */
     public Order(String symbol, int shares, Double price, OrderType type) {
         this.Symbol = symbol;
         this.Shares = shares;
