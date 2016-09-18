@@ -1,6 +1,7 @@
 package EmailManager;
 
 import com.joanzapata.utils.Strings;
+import org.junit.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -49,6 +50,7 @@ public class EmailManager {
      *
      * @param username: Username
      * @param password: Password
+     * @param recipient: Email recipient
      */
     private EmailManager(String username, String password, String recipient) {
         this.username = username;
@@ -64,6 +66,9 @@ public class EmailManager {
      */
 
     public static EmailManager GetAndInitializeEmailmanager(String pathString) {
+
+        // Data validation
+        Assert.assertNotNull(pathString);
 
         if (EmailManager.instance != null)
             return EmailManager.instance;
@@ -106,13 +111,6 @@ public class EmailManager {
         return EmailRecipient;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
 
     /**
      * Authenticate Gmail credentail.

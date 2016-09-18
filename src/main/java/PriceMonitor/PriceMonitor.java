@@ -1,6 +1,5 @@
 package PriceMonitor;
 
-import DataManager.DataManager;
 import JooqMap.tables.Sharedstockitems;
 import JooqMap.tables.records.SharedstockitemsRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
@@ -43,10 +42,12 @@ public class PriceMonitor {
         return PriceMonitor.stockPriceMap.values().toArray(new StockItem[0]);
     }
 
-    // Register symbols to price monitor
+    /**
+     *  Register symbols to price monitor
+     */
     public static void RegisterStockSymboles(SharedstockitemsRecord boughtStockItem) {
-        // Lock the map for multi thread safe
 
+        // Lock the map for multi thread safe
         try {
             synchronized (PriceMonitor.stockPriceMap) {
                 String symbol = boughtStockItem.getSymbol();
