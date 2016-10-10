@@ -1,6 +1,6 @@
 # config/solano.yml
 java:
-  java_version: 1.8.0_91
+  java_version: java-8-oracle
   maven_version: '3.3.9'
 tests:
   - mvn verify
