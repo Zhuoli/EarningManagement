@@ -2,12 +2,15 @@
 
 version: 0.0
 os: linux
-hooks:
-  BeforeInstall:
-    - location: target/EarningManagement-1.0-SNAPSHOT.jar
-      timeout: 600
-      runas: root
-  ApplicationStop:
-    - location: scripts/stop_server
-      timeout: 300
-      runas: root
+#files:
+#  - source: /target/EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
+#    destination: /EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
+#hooks:
+#  BeforeInstall:
+#    - location: EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
+#      timeout: 600
+#      runas: root
+#  ApplicationStop:
+#    - location: EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
+#      timeout: 300
+#      runas: root
