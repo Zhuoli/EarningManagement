@@ -1,7 +1,5 @@
-src/resources/resourceConfig.xml
 *.class
 *.xml
 *.jar
 *.log.*
 *.log*
-src/resources/*
