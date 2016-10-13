@@ -44,7 +44,7 @@ public class StockMaster {
             fileHandler.setFormatter(simpleFormatter);
             Logger.getGlobal().addHandler(fileHandler);
             fileHandler.setLevel(Level.ALL);
-            System.out.println("Log setup succeed, log file stored at " + filePath);
+            System.out.println("Log setup succeed, log file stored at : '" + filePath + "'");
         } catch (Exception exc) {
             exc.printStackTrace();
         }
