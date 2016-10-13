@@ -3,6 +3,7 @@ import PriceMonitor.PriceMonitor;
 import ResultPublisher.ResultPublisher;
 import com.joanzapata.utils.Strings;
 
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,9 @@ public class StockMaster {
      */
     public static void SetUp() {
         try {
-            String filePath = Strings.format("./{classname}.log").with("classname", StockMaster.class.getName()).build();
+
+            // Log absolute path
+            String filePath = Paths.get("").toAbsolutePath() + Strings.format("/{classname}.log").with("classname", StockMaster.class.getName()).build();
 
             // Log format
             SimpleFormatter simpleFormatter = new SimpleFormatter();
