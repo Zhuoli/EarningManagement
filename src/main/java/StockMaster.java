@@ -45,6 +45,7 @@ public class StockMaster {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
+        System.exit(1);
     }
 
     /**

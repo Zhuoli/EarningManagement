@@ -5,11 +5,11 @@ os: linux
 #files:
 #  - source: /target/EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
 #    destination: /EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
-#hooks:
-#  BeforeInstall:
-#    - location: EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
-#      timeout: 600
-#      runas: root
+hooks:
+  BeforeInstall:
+    - location: start.sh
+      timeout: 600
+      runas: root
 #  ApplicationStop:
 #    - location: EarningManagement-1.0-SNAPSHOT-jar-with-dependencies.jar
 #      timeout: 300
