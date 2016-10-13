@@ -3,7 +3,7 @@
 version: 0.0
 os: linux
 hooks:
-  BeforeInstall:
+  ApplicationStart:
     - location: scripts/server_start.sh
       timeout: 600
       runas: root
