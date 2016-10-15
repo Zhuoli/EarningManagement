@@ -48,7 +48,8 @@ public class StockMaster {
         } catch (Exception exc) {
             exc.printStackTrace();
         }
-        System.exit(1);
+        // TODO : Exit with 1 once code deploy set up
+        //        System.exit(1);
     }
 
     /**
