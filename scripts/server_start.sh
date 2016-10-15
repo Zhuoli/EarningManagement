@@ -7,6 +7,8 @@ currentDir=$(
 echo script $currentDir
 echo "target Path:"
 targetDir="$currentDir/../target"
+echo "Java version:"
+java -version
 echo ${targetDir}
 cd $targetDir
 
