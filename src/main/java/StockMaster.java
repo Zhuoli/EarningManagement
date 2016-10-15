@@ -16,7 +16,8 @@ import java.util.logging.*;
 public class StockMaster {
 
     public static void main(String[] args) {
-        StockMaster.SetUp();
+        if (!StockMaster.SetUp())
+            return;
         try {
             new StockMaster().start(args);
             return;
@@ -24,13 +25,14 @@ public class StockMaster {
             Logger.getGlobal().log(Level.SEVERE, "Unexpected exception", exc);
             exc.printStackTrace();
         }
-        System.exit(1);
+        // TODO : Exit with 1 once code deploy set up
+        // System.exit(1);
     }
 
     /**
      * Sets up the environment.
      */
-    public static void SetUp() {
+    public static boolean SetUp() {
         try {
 
             // Log absolute path
@@ -47,9 +49,9 @@ public class StockMaster {
             System.out.println("Log setup succeed, log file stored at : '" + filePath + "'");
         } catch (Exception exc) {
             exc.printStackTrace();
+            return false;
         }
-        // TODO : Exit with 1 once code deploy set up
-        //        System.exit(1);
+        return true;
     }
 
     /**
