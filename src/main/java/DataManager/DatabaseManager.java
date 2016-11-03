@@ -101,7 +101,7 @@ public class DatabaseManager extends DataManager{
         Assert.assertNotNull(userName);
         Assert.assertNotNull(password);
 
-        this.url = "jdbc:mysql://" + url + "/" + database;
+        this.url = "jdbc:mysql://" + dbUrl + "/" + database;
         this.userName = userName;
         this.password = password;
     }
@@ -242,11 +242,8 @@ public class DatabaseManager extends DataManager{
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
             return result.stream().map(p -> (SharedstockitemsRecord) p).collect(Collectors.toList());
-        }
-
-        // For the sake of this tutorial, let's keep exception handling simple
-        catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
+        }catch (Exception e) {
+            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records." + '\t'  + this.url + '\t' + this.userName, e);
             return new LinkedList<>();
         }
     }
