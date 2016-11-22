@@ -1,6 +1,7 @@
 package DataManager;
 
 import JooqMap.tables.records.SharedstockitemsRecord;
+import com.mysql.jdbc.CommunicationsException;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.junit.Assert;
@@ -166,6 +167,11 @@ public class DatabaseManager extends DataManager{
                 break;
             }
         }
+        catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException communicationException)
+        {
+            Logger.getGlobal().log(Level.SEVERE, "Unable to setup connection with database.", communicationException);
+            System.exit(1);
+        }
         // For the sake of this tutorial, let's keep exception handling simple
         catch (Exception e) {
             Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
@@ -224,13 +230,14 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public List<SharedstockitemsRecord> ReadSharedStocks() {
+    public List<SharedstockitemsRecord> ReadSharedStocks() throws SQLException{
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             Logger.getGlobal().log(Level.SEVERE, "", e);
             return new LinkedList<>();
         }
+
         // Connection is the only JDBC resource that we need
         // PreparedStatement and ResultSet are handled by jOOQ, internally
         try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
@@ -242,9 +249,6 @@ public class DatabaseManager extends DataManager{
             Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
 
             return result.stream().map(p -> (SharedstockitemsRecord) p).collect(Collectors.toList());
-        }catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records." + '\t'  + this.url + '\t' + this.userName, e);
-            return new LinkedList<>();
         }
     }
     public Optional<Table<?>> GetTable(DSLContext create, String tableName) {
