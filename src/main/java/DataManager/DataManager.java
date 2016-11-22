@@ -50,14 +50,9 @@ public class DataManager {
      * To be override.
      * @return
      */
-    public List<SharedstockitemsRecord> ReadSharedStocks()
+    public List<SharedstockitemsRecord> ReadSharedStocks() throws SQLException
     {
-        try {
-            throw new Exception("Not implemented.");
-        } catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Not implemented", e);
-        }
-        return new LinkedList<>();
+        throw new SQLException("Not implemented.");
     }
 
     /**
@@ -86,6 +81,9 @@ public class DataManager {
 
                 Thread.sleep(5 * 1000);
             }
+        } catch (SQLException sqlexc){
+            Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlexc);
+            System.exit(1);
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "Price Prophet thread Interrupted", exc);
         }
