@@ -105,6 +105,8 @@ public class DatabaseManager extends DataManager{
         this.url = "jdbc:mysql://" + dbUrl + "/" + database;
         this.userName = userName;
         this.password = password;
+
+        Logger.getGlobal().log(Level.INFO, "Database Server User: {0}, at Address: {1}", new Object[]{ this.userName, this.url});
     }
 
     public static void main(String[] args) {
@@ -113,7 +115,7 @@ public class DatabaseManager extends DataManager{
 
 
     @Override
-    public void WriteSharedStocks(Order[] orders){
+    public void WriteSharedStocks(Order[] orders) throws Exception {
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -166,15 +168,6 @@ public class DatabaseManager extends DataManager{
                 }
                 break;
             }
-        }
-        catch (com.mysql.jdbc.exceptions.jdbc4.CommunicationsException communicationException)
-        {
-            Logger.getGlobal().log(Level.SEVERE, "Unable to setup connection with database.", communicationException);
-            System.exit(1);
-        }
-        // For the sake of this tutorial, let's keep exception handling simple
-        catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
         }
     }
 
@@ -230,12 +223,12 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public List<SharedstockitemsRecord> ReadSharedStocks() throws SQLException{
+    public List<SharedstockitemsRecord> ReadSharedStocks() throws Exception{
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
-            Logger.getGlobal().log(Level.SEVERE, "", e);
-            return new LinkedList<>();
+            Logger.getGlobal().log(Level.SEVERE, "jdbc Driver not found", e);
+            throw e;
         }
 
         // Connection is the only JDBC resource that we need

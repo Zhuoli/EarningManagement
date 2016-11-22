@@ -25,8 +25,7 @@ public class DataManager {
     protected Consumer<SharedstockitemsRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
-    protected DataManager()
-    {
+    protected DataManager() {
 
     }
 
@@ -48,24 +47,20 @@ public class DataManager {
 
     /**
      * To be override.
+     *
      * @return
      */
-    public List<SharedstockitemsRecord> ReadSharedStocks() throws SQLException
-    {
+    public List<SharedstockitemsRecord> ReadSharedStocks() throws Exception {
         throw new SQLException("Not implemented.");
     }
 
     /**
      * To be override.
+     *
      * @param orders
      */
-    public void WriteSharedStocks(Order[] orders){
-
-        try {
-            throw new Exception("Not implemented.");
-        } catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Not implemented", e);
-        }
+    public void WriteSharedStocks(Order[] orders) throws Exception {
+        throw new Exception("Not implemented.");
     }
 
 
@@ -81,7 +76,7 @@ public class DataManager {
 
                 Thread.sleep(5 * 1000);
             }
-        } catch (SQLException sqlexc){
+        } catch (SQLException sqlexc) {
             Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlexc);
             System.exit(1);
         } catch (Exception exc) {
@@ -91,6 +86,7 @@ public class DataManager {
 
     /**
      * Query email box to see if has new stock order been placed.
+     *
      * @return orders.
      */
     private static final String OrderToBuyString = "Your market order to buy";
@@ -106,7 +102,7 @@ public class DataManager {
             // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
                 Order order = new RetryManager<>(this::ParseEmail).Execute(email);
-                if (order != null){
+                if (order != null) {
                     orders.add(order);
                 }
             }
@@ -123,8 +119,7 @@ public class DataManager {
         OrderType orderType = OrderType.BUY;
 
         // Buying order
-        if (email.Content.contains(DataManager.OrderToBuyString))
-        {
+        if (email.Content.contains(DataManager.OrderToBuyString)) {
             int index = email.Content.indexOf(DataManager.OrderToBuyString);
             orderType = OrderType.BUY;
             String sharesString = paragraph.substring(index + DataManager.OrderToBuyString.length(), paragraph.indexOf(" share")).trim();
@@ -132,14 +127,12 @@ public class DataManager {
         }
 
         // Selling order
-        else if(email.Content.contains(DataManager.OrderToSellString))
-        {
+        else if (email.Content.contains(DataManager.OrderToSellString)) {
             int index = email.Content.indexOf(DataManager.OrderToSellString);
             orderType = OrderType.SELL;
             String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
             shares = Integer.parseInt(sharesString);
-        }
-        else{
+        } else {
             Logger.getGlobal().warning("Failed to parse order type : " + email.Content);
             return null;
         }
@@ -151,7 +144,7 @@ public class DataManager {
 
         int symbolIndex = paragraph.indexOf("was executed at");
         String[] words = paragraph.substring(0, symbolIndex).trim().split(" ");
-        String symbol = words[words.length-1];
+        String symbol = words[words.length - 1];
 
 
         // Get price
