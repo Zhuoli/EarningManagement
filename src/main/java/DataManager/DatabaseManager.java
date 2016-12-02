@@ -1,6 +1,6 @@
 package DataManager;
 
-import JooqMap.tables.records.SharedstockitemsRecord;
+import JooqORM.tables.records.StockRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.junit.Assert;
@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static JooqMap.Tables.SHAREDSTOCKITEMS;
+import static JooqORM.Tables.STOCK;
 
 
 /**
@@ -125,23 +125,23 @@ public class DatabaseManager extends DataManager{
         // PreparedStatement and ResultSet are handled by jOOQ, internally
         try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
             DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-            Optional<Table<?>> table = this.GetTable(create, SHAREDSTOCKITEMS.getName());
+            Optional<Table<?>> table = this.GetTable(create, STOCK.getName());
             if (!table.isPresent()) {
-                create.createTable(SHAREDSTOCKITEMS).columns(SHAREDSTOCKITEMS.fields()).execute();
+                create.createTable(STOCK).columns(STOCK.fields()).execute();
             }
 
             // Database query result
-            Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
+            Result<Record> result = create.select().from(STOCK).fetch();
 
             // Map query result to StockItems
-            HashMap<String, SharedstockitemsRecord> stockMap = new HashMap<>();
-            result.stream().map(r -> (SharedstockitemsRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
+            HashMap<String, StockRecord> stockMap = new HashMap<>();
+            result.stream().map(r -> (StockRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
 
             // Check each new email order
             for (Order order : orders) {
                 // If in table, update row
                 if (stockMap.containsKey(order.Symbol)) {
-                    SharedstockitemsRecord sharedStock = stockMap.get(orders);
+                    StockRecord sharedStock = stockMap.get(orders);
                     sharedStock = this.UpdateStockShares(sharedStock, order);
 
                     // Delete shares
@@ -157,8 +157,8 @@ public class DatabaseManager extends DataManager{
 
                 } else {
                     // Else, insert this row
-                    create.insertInto(SHAREDSTOCKITEMS,
-                            SHAREDSTOCKITEMS.SYMBOL, SHAREDSTOCKITEMS.SHARES, SHAREDSTOCKITEMS.SHAREDAVERAGECOST)
+                    create.insertInto(STOCK,
+                            STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST)
                             .values(order.Symbol, order.Shares, order.Price).execute();
 
                     System.out.println("New row inserted " + order);
@@ -179,7 +179,7 @@ public class DatabaseManager extends DataManager{
      * @param newOrder
      * @return
      */
-    private SharedstockitemsRecord UpdateStockShares(SharedstockitemsRecord sharedStock, Order newOrder)
+    private StockRecord UpdateStockShares(StockRecord sharedStock, Order newOrder)
     {
         Assert.assertNotNull(sharedStock);
         Assert.assertNotNull(newOrder);
@@ -194,7 +194,7 @@ public class DatabaseManager extends DataManager{
         int shares = sharedStock.getShares();
 
         // Get average cost of each share
-        double aveCost = sharedStock.getSharedaveragecost();
+        double aveCost = sharedStock.getSharedAverageCost();
 
         // Calculate the total cost after the new order
         double newSum = shares * aveCost;
@@ -219,12 +219,12 @@ public class DatabaseManager extends DataManager{
         double newAveCost = newSum / newShares;
 
         sharedStock.setShares(newShares);
-        sharedStock.setSharedaveragecost(newAveCost);
+        sharedStock.setSharedAverageCost(newAveCost);
         return sharedStock;
     }
 
     @Override
-    public List<SharedstockitemsRecord> ReadSharedStocks() {
+    public List<StockRecord> ReadSharedStocks() {
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -235,13 +235,13 @@ public class DatabaseManager extends DataManager{
         // PreparedStatement and ResultSet are handled by jOOQ, internally
         try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
             DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-            Optional<Table<?>> table = this.GetTable(create, SHAREDSTOCKITEMS.getName());
+            Optional<Table<?>> table = this.GetTable(create, STOCK.getName());
             if (!table.isPresent()) {
-                create.createTable(SHAREDSTOCKITEMS).columns(SHAREDSTOCKITEMS.fields()).execute();
+                create.createTable(STOCK).columns(STOCK.fields()).execute();
             }
-            Result<Record> result = create.select().from(SHAREDSTOCKITEMS).fetch();
+            Result<Record> result = create.select().from(STOCK).fetch();
 
-            return result.stream().map(p -> (SharedstockitemsRecord) p).collect(Collectors.toList());
+            return result.stream().map(p -> (StockRecord) p).collect(Collectors.toList());
         }catch (Exception e) {
             Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records." + '\t'  + this.url + '\t' + this.userName, e);
             return new LinkedList<>();
