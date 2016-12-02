@@ -2,7 +2,7 @@ package DataManager;
 
 import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
-import JooqMap.tables.records.SharedstockitemsRecord;
+import JooqORM.tables.records.StockRecord;
 import PriceMonitor.stock.StockItem;
 import Utility.RetryManager;
 
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public class DataManager {
 
 
-    protected Consumer<SharedstockitemsRecord> stockItemRegister;
+    protected Consumer<StockRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
     protected DataManager()
@@ -33,7 +33,7 @@ public class DataManager {
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public static DataManager GetDataManager(Consumer<SharedstockitemsRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
+    public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
             DatabaseManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
@@ -50,7 +50,7 @@ public class DataManager {
      * To be override.
      * @return
      */
-    public List<SharedstockitemsRecord> ReadSharedStocks()
+    public List<StockRecord> ReadSharedStocks()
     {
         try {
             throw new Exception("Not implemented.");

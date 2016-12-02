@@ -1,7 +1,7 @@
 package PriceMonitor;
 
-import JooqMap.tables.Sharedstockitems;
-import JooqMap.tables.records.SharedstockitemsRecord;
+import JooqORM.tables.Stock;
+import JooqORM.tables.records.StockRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 import PriceMonitor.stock.StockItem;
 
@@ -45,24 +45,24 @@ public class PriceMonitor {
     /**
      *  Register symbols to price monitor
      */
-    public static void RegisterStockSymboles(SharedstockitemsRecord boughtStockItem) {
+    public static void RegisterStockSymboles(StockRecord boughtStockItem) {
 
         // Lock the map for multi thread safe
         try {
             synchronized (PriceMonitor.stockPriceMap) {
                 String symbol = boughtStockItem.getSymbol();
-                double averageCost = boughtStockItem.getSharedaveragecost();
+                double averageCost = boughtStockItem.getSharedAverageCost();
                 int number = boughtStockItem.getShares();
                 double targetPriceNasdaq = 0;
                 try {
-                    targetPriceNasdaq = boughtStockItem.getTargetprice();
+                    targetPriceNasdaq = boughtStockItem.getTargetPrice();
                 } catch (Exception e) {
 
                 }
 
                 // Update stock mapper
                 if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
-                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Sharedstockitems.SHAREDSTOCKITEMS.SYMBOL));
+                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Stock.STOCK.SYMBOL));
                     item.AverageCost = averageCost;
                     item.Shares = number;
                 } else {
