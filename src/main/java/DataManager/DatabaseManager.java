@@ -112,13 +112,14 @@ public class DatabaseManager extends DataManager{
 
 
     @Override
-    public void WriteSharedStocks(Order[] orders){
+    public void WriteSharedStocks(Order[] orders) throws Exception{
         this.getNewQueriedStockItemsFunc.get();
 
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             Logger.getGlobal().log(Level.SEVERE, "", e);
+            throw e;
         }
 
         // Connection is the only JDBC resource that we need
@@ -137,11 +138,11 @@ public class DatabaseManager extends DataManager{
             HashMap<String, StockRecord> stockMap = new HashMap<>();
             result.stream().map(r -> (StockRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
 
-            // Check each new email order
+            // Check each email order
             for (Order order : orders) {
                 // If in table, update row
                 if (stockMap.containsKey(order.Symbol)) {
-                    StockRecord sharedStock = stockMap.get(orders);
+                    StockRecord sharedStock = stockMap.get(order.Symbol);
                     sharedStock = this.UpdateStockShares(sharedStock, order);
 
                     // Delete shares
@@ -161,14 +162,17 @@ public class DatabaseManager extends DataManager{
                             STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST)
                             .values(order.Symbol, order.Shares, order.Price).execute();
 
+                    StockRecord updatedStock = create.fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                    Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
+                    stockMap.put(updatedStock.getSymbol(), updatedStock);
+
                     System.out.println("New row inserted " + order);
                 }
-                break;
             }
         }
-        // For the sake of this tutorial, let's keep exception handling simple
-        catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records", e);
+        catch (SQLException sqlException){
+            Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlException);
+            throw sqlException;
         }
     }
 
@@ -187,8 +191,8 @@ public class DatabaseManager extends DataManager{
         // Order type should always be set
         Assert.assertTrue(newOrder.type != OrderType.UNKNOWN);
 
-        if(newOrder.type == OrderType.SELL)
-            Assert.assertTrue("Existing shares should not less than the selling order", sharedStock.getShares() >= newOrder.Shares);
+//        if(newOrder.type == OrderType.SELL)
+//            Assert.assertTrue(String.format("Existing shares $s should not less than the selling order $s for symbol: '$s'", sharedStock.getShares(), newOrder.Shares, newOrder.Symbol), sharedStock.getShares() >= newOrder.Shares);
 
         // Get the number of shares
         int shares = sharedStock.getShares();

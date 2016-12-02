@@ -19,11 +19,20 @@ import java.util.logging.Logger;
 /**
  * Created by zhuolil on 8/17/16.
  */
-public class DataManager {
+public abstract class DataManager {
 
 
+    /**
+     * Stock Item Register method
+     */
     protected Consumer<StockRecord> stockItemRegister;
+
+    /**
+     * Get ne queried stock items function
+     */
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
+
+    protected EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
 
     protected DataManager()
     {
@@ -35,7 +44,7 @@ public class DataManager {
      */
     public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
-            DatabaseManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
+            DataManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
             return manager;
@@ -55,7 +64,7 @@ public class DataManager {
     }
 
     /**
-     * To be override.
+     * To be override by the subclass.
      * @param orders
      */
     public void WriteSharedStocks(Order[] orders) throws Exception {
@@ -66,10 +75,16 @@ public class DataManager {
     // Start thread
     public void Start() {
         try {
+
+            MonitorEmail[] seenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", true);
+            Order[] seenOrders = this.CheckForNewOrdersPlaced(seenRobinHoodEmails);
+            this.WriteSharedStocks(seenOrders);
+
             while (true) {
                 // Register stocks queried from database
                 this.ReadSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
-                Order[] newOrders = this.CheckForNewOrdersPlaced();
+                MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
+                Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
 
                 this.WriteSharedStocks(newOrders);
 
@@ -80,23 +95,20 @@ public class DataManager {
             System.exit(1);
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "Price Prophet thread Interrupted", exc);
+            System.exit(1);
         }
     }
+
+    private static final String OrderToBuyString = "Your market order to buy";
+    private static final String OrderToSellString = "Your market order to sell";
 
     /**
      * Query email box to see if has new stock order been placed.
      * @return orders.
      */
-    private static final String OrderToBuyString = "Your market order to buy";
-    private static final String OrderToSellString = "Your market order to sell";
-
-    private Order[] CheckForNewOrdersPlaced() {
+    private Order[] CheckForNewOrdersPlaced(MonitorEmail[] robinhoodEmails) {
         LinkedList<Order> orders = new LinkedList<>();
         try {
-            EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
-            MonitorEmail[] robinhoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
-            robinhoodEmails = Arrays.stream(robinhoodEmails).filter(email -> email.Subject.contains("Your order has been executed")).toArray(size -> new MonitorEmail[size]);
-
             // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
                 Order order = new RetryManager<>(this::ParseEmail).Execute(email);

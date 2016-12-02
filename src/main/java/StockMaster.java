@@ -6,6 +6,7 @@ import com.joanzapata.utils.Strings;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
 
@@ -81,17 +82,17 @@ public class StockMaster {
         DataManager dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles, PriceMonitor::GetStocks);
 
         // Submit result publisher thread
-        taskExecutor.submit(() -> {
+        Future publisherTask = taskExecutor.submit(() -> {
             publisher.Start();
         });
 
         // Submit data manager thread
-        taskExecutor.submit(() -> {
+        Future dataManagerTask = taskExecutor.submit(() -> {
             dataManager.Start();
         });
 
         // Submit Price monitor thread
-        taskExecutor.submit(() -> {
+        Future priceMonitorTask = taskExecutor.submit(() -> {
             try {
                 priceMonitor.Start();
             } catch (InterruptedException e) {
@@ -102,7 +103,25 @@ public class StockMaster {
         // Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted. Invocation has no additional effect if already shut down.
         taskExecutor.shutdown();
         // Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs, or the current thread is interrupted, whichever happens first.
-        taskExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        while (!taskExecutor.awaitTermination(30, TimeUnit.SECONDS))
+        {
+            if (publisherTask.isCancelled() || publisherTask.isDone()){
+
+                Logger.getGlobal().log(Level.SEVERE, "Publisher task exit abnormally.");
+                System.exit(1);
+            }
+
+            if( dataManagerTask.isCancelled() || dataManagerTask.isDone()){
+
+                Logger.getGlobal().log(Level.SEVERE, "dataManagerTask task exit abnormally.");
+                System.exit(1);
+            }
+            if(priceMonitorTask.isCancelled() || priceMonitorTask.isDone()){
+
+                Logger.getGlobal().log(Level.SEVERE, "priceMonitorTask task exit abnormally.");
+                System.exit(1);
+            }
+        }
 
         // Log for Abnormal state
         Logger.getGlobal().severe("System shutdown");
