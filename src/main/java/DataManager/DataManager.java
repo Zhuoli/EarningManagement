@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public class DataManager {
 
 
-    protected Consumer<StockRecord> stockItemRegister;
+    protected Consumer<SharedstockitemsRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
     protected DataManager()
@@ -50,27 +50,16 @@ public class DataManager {
      * To be override.
      * @return
      */
-    public List<StockRecord> ReadSharedStocks()
-    {
-        try {
-            throw new Exception("Not implemented.");
-        } catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Not implemented", e);
-        }
-        return new LinkedList<>();
+    public List<StockRecord> ReadSharedStocks() throws Exception {
+        throw new SQLException("Not implemented.");
     }
 
     /**
      * To be override.
      * @param orders
      */
-    public void WriteSharedStocks(Order[] orders){
-
-        try {
-            throw new Exception("Not implemented.");
-        } catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Not implemented", e);
-        }
+    public void WriteSharedStocks(Order[] orders) throws Exception {
+        throw new Exception("Not implemented.");
     }
 
 
@@ -86,6 +75,9 @@ public class DataManager {
 
                 Thread.sleep(5 * 1000);
             }
+        } catch (SQLException sqlexc) {
+            Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlexc);
+            System.exit(1);
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "Price Prophet thread Interrupted", exc);
         }
