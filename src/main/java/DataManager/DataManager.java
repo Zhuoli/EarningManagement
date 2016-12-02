@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 public class DataManager {
 
 
-    protected Consumer<SharedstockitemsRecord> stockItemRegister;
+    protected Consumer<StockRecord> stockItemRegister;
     protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
 
     protected DataManager()
