@@ -10,11 +10,8 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - mvn install
+      - mvn package
   post_build:
     commands:
       - echo Build completed on `date`
-artifacts:
-  type: zip
-  files:
-    - target/messageUtil-1.0.jar
+
