@@ -34,7 +34,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Stock extends TableImpl<StockRecord> {
 
-    private static final long serialVersionUID = 536204115;
+    private static final long serialVersionUID = -2063172785;
 
     /**
      * The reference instance of <code>EarningManagerDB.stock</code>
@@ -57,12 +57,12 @@ public class Stock extends TableImpl<StockRecord> {
     /**
      * The column <code>EarningManagerDB.stock.report_date</code>.
      */
-    public final TableField<StockRecord, byte[]> REPORT_DATE = createField("report_date", org.jooq.impl.SQLDataType.BLOB, this, "");
+    public final TableField<StockRecord, String> REPORT_DATE = createField("report_date", org.jooq.impl.SQLDataType.VARCHAR.length(255), this, "");
 
     /**
      * The column <code>EarningManagerDB.stock.shared_average_cost</code>.
      */
-    public final TableField<StockRecord, Double> SHARED_AVERAGE_COST = createField("shared_average_cost", org.jooq.impl.SQLDataType.FLOAT, this, "");
+    public final TableField<StockRecord, Double> SHARED_AVERAGE_COST = createField("shared_average_cost", org.jooq.impl.SQLDataType.FLOAT.nullable(false), this, "");
 
     /**
      * The column <code>EarningManagerDB.stock.shares</code>.
@@ -72,7 +72,7 @@ public class Stock extends TableImpl<StockRecord> {
     /**
      * The column <code>EarningManagerDB.stock.target_price</code>.
      */
-    public final TableField<StockRecord, Double> TARGET_PRICE = createField("target_price", org.jooq.impl.SQLDataType.FLOAT.nullable(false), this, "");
+    public final TableField<StockRecord, Double> TARGET_PRICE = createField("target_price", org.jooq.impl.SQLDataType.FLOAT, this, "");
 
     /**
      * Create a <code>EarningManagerDB.stock</code> table reference
