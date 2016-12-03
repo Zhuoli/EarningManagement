@@ -53,6 +53,6 @@ public class StockItem {
     // Set earning report date
     public void setEarningReportDate(LocalDate earningReportDate) {
         // Returns an Optional describing the specified value, if non-null, otherwise returns an empty Optional.
-        Optional.ofNullable(earningReportDate);
+        this.EarningReportDate = Optional.ofNullable(earningReportDate);
     }
 }

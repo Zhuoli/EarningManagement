@@ -92,28 +92,26 @@ public class PriceMonitor {
             while (shouldContinue) {
                 // Lock the map for multi thread safe
                 //System.out.println("PriceMonitor acquired lock: stockPriceMap");
-                synchronized (PriceMonitor.stockPriceMap) {
-                    for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
+                for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
 
-                        try {
-                            stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
+                    try {
+                        stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
 
-                            stockItem.LastUpdateTime = LocalDateTime.now();
+                        stockItem.LastUpdateTime = LocalDateTime.now();
 
-                            // Sleep a while to avoid access limit
-                            Thread.sleep(500);
-                        } catch (Exception exc) {
-                            String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
-                            System.err.println(line);
-                            System.err.print(exc.getMessage());
-                        }
+                        // Sleep a while to avoid access limit
+                        Thread.sleep(500);
+                    } catch (Exception exc) {
+                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
+                        System.err.println(line);
+                        System.err.print(exc.getMessage());
+                    }
 
-                        Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
+                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
 
-                        // Update earning report date
-                        if (localDate.isPresent()) {
-                            stockItem.setEarningReportDate(localDate.get());
-                        }
+                    // Update earning report date
+                    if (localDate.isPresent()) {
+                        stockItem.setEarningReportDate(localDate.get());
                     }
                 }
 

@@ -1,6 +1,8 @@
 package DataManager;
 
 import JooqORM.tables.records.StockRecord;
+import PriceMonitor.PriceMonitor;
+import PriceMonitor.stock.StockItem;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.junit.Assert;
@@ -39,7 +41,6 @@ public class DatabaseManager extends DataManager{
     private String url;
     private String userName;
     private String password;
-
 
     /**
      * Initialize EmailMananger from XML configuration file.
@@ -111,6 +112,30 @@ public class DatabaseManager extends DataManager{
     }
 
 
+    private Connection conn = null;
+    private DSLContext globalCreate = null;
+
+    /**
+     * Sets up and maintains SQL connection
+     * @return DSLContext instance
+     * @throws Exception
+     */
+    public DSLContext getDBJooqCreate() throws Exception{
+
+        // Reuse sql connection
+        if (this.conn!=null && !this.conn.isClosed() && this.globalCreate!=null)
+            return this.globalCreate;
+
+        Connection conn = DriverManager.getConnection(this.url, this.userName, this.password);
+        this.globalCreate = DSL.using(conn, SQLDialect.MYSQL);
+        Optional<Table<?>> table = this.GetTable(this.globalCreate, STOCK.getName());
+        if (!table.isPresent()) {
+            this.globalCreate.createTable(STOCK).columns(STOCK.fields()).execute();
+        }
+        return this.globalCreate;
+    }
+
+
     @Override
     public void WriteSharedStocks(Order[] orders) throws Exception{
         this.getNewQueriedStockItemsFunc.get();
@@ -122,58 +147,85 @@ public class DatabaseManager extends DataManager{
             throw e;
         }
 
-        // Connection is the only JDBC resource that we need
-        // PreparedStatement and ResultSet are handled by jOOQ, internally
-        try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
-            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-            Optional<Table<?>> table = this.GetTable(create, STOCK.getName());
-            if (!table.isPresent()) {
-                create.createTable(STOCK).columns(STOCK.fields()).execute();
+        // Database query result
+        Result<Record> result = this.getDBJooqCreate().select().from(STOCK).fetch();
+
+        // Map query result to StockItems
+        HashMap<String, StockRecord> stockMap = new HashMap<>();
+        result.stream().map(r -> (StockRecord) r).forEach(stockRecord -> stockMap.put(stockRecord.getSymbol(), stockRecord));
+
+        // Check each email order
+        for (Order order : orders) {
+            // If in table, update row
+            if (stockMap.containsKey(order.Symbol)) {
+                StockRecord sharedStock = stockMap.get(order.Symbol);
+                sharedStock = this.UpdateStockShares(sharedStock, order);
+
+                // Delete shares
+                if (sharedStock.getShares() == 0)
+                {
+                    // Deletes this record from the database, based on the value of the primary key or main unique key.
+                    sharedStock.delete();
+                }
+
+                synchronized(PriceMonitor.stockPriceMap) {
+                    StockItem stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
+                    if (stockItem != null)
+                        sharedStock.setReportDate(stockItem.getEarningReportDate().get().toString());
+                }
+
+                // Store this record back to the database using an UPDATE statement.
+                // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
+                sharedStock.update();
+
+            } else {
+                // Else, insert this row
+                this.getDBJooqCreate().insertInto(STOCK,
+                        STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST)
+                        .values(order.Symbol, order.Shares, order.Price).execute();
+
+                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
+                stockMap.put(updatedStock.getSymbol(), updatedStock);
+
+                System.out.println("New row inserted " + order);
             }
+        }
+    }
 
-            // Database query result
-            Result<Record> result = create.select().from(STOCK).fetch();
+    public void writeReportDate(StockItem[] stockItems) throws Exception{
+        this.getNewQueriedStockItemsFunc.get();
 
-            // Map query result to StockItems
-            HashMap<String, StockRecord> stockMap = new HashMap<>();
-            result.stream().map(r -> (StockRecord) r).forEach(stockItem -> stockMap.put(stockItem.getSymbol(), stockItem));
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            Logger.getGlobal().log(Level.SEVERE, "", e);
+            throw e;
+        }
+
 
             // Check each email order
-            for (Order order : orders) {
-                // If in table, update row
-                if (stockMap.containsKey(order.Symbol)) {
-                    StockRecord sharedStock = stockMap.get(order.Symbol);
-                    sharedStock = this.UpdateStockShares(sharedStock, order);
+            for (StockItem stockItem : stockItems) {
+                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.Symbol));
 
-                    // Delete shares
-                    if (sharedStock.getShares() == 0)
-                    {
-                        // Deletes this record from the database, based on the value of the primary key or main unique key.
-                        sharedStock.delete();
-                    }
+                // If in table, update row
+                if (updatedStock != null) {
+                    updatedStock.setReportDate(stockItem.getEarningReportDate().get().toString());
 
                     // Store this record back to the database using an UPDATE statement.
                     // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
-                    sharedStock.update();
+                    updatedStock.update();
 
                 } else {
                     // Else, insert this row
-                    create.insertInto(STOCK,
-                            STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST)
-                            .values(order.Symbol, order.Shares, order.Price).execute();
+                    this.getDBJooqCreate().insertInto(STOCK,
+                            STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST, STOCK.REPORT_DATE)
+                            .values(stockItem.Symbol, stockItem.Shares, stockItem.Price, stockItem.getEarningReportDate().get().toString()).execute();
 
-                    StockRecord updatedStock = create.fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                    StockRecord result = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.Symbol));
                     Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
-                    stockMap.put(updatedStock.getSymbol(), updatedStock);
-
-                    System.out.println("New row inserted " + order);
                 }
             }
-        }
-        catch (SQLException sqlException){
-            Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlException);
-            throw sqlException;
-        }
     }
 
     /**

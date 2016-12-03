@@ -2,7 +2,9 @@ package DataManager;
 
 import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
+import JooqORM.tables.Stock;
 import JooqORM.tables.records.StockRecord;
+import PriceMonitor.PriceMonitor;
 import PriceMonitor.stock.StockItem;
 import Utility.RetryManager;
 
@@ -59,17 +61,13 @@ public abstract class DataManager {
      * To be override.
      * @return
      */
-    public List<StockRecord> ReadSharedStocks() throws Exception {
-        throw new SQLException("Not implemented.");
-    }
+    public abstract List<StockRecord> ReadSharedStocks() throws Exception ;
 
     /**
      * To be override by the subclass.
      * @param orders
      */
-    public void WriteSharedStocks(Order[] orders) throws Exception {
-        throw new Exception("Not implemented.");
-    }
+    public abstract void WriteSharedStocks(Order[] orders) throws Exception ;
 
 
     // Start thread
@@ -88,6 +86,8 @@ public abstract class DataManager {
 
                 this.WriteSharedStocks(newOrders);
 
+                this.updateReportDateToDatabase();
+
                 Thread.sleep(5 * 1000);
             }
         } catch (SQLException sqlexc) {
@@ -98,6 +98,20 @@ public abstract class DataManager {
             System.exit(1);
         }
     }
+
+    private void updateReportDateToDatabase() throws Exception{
+
+        synchronized(PriceMonitor.stockPriceMap) {
+            if(PriceMonitor.stockPriceMap.values().stream().anyMatch(stockitem -> stockitem.getEarningReportDate().isPresent()))
+            {
+                StockItem[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getEarningReportDate().isPresent()).toArray(size -> new StockItem[size]);
+                this.writeReportDate(stockItems);
+            }
+        }
+
+    }
+
+    protected abstract void writeReportDate(StockItem[] stockItems) throws Exception;
 
     private static final String OrderToBuyString = "Your market order to buy";
     private static final String OrderToSellString = "Your market order to sell";
