@@ -168,7 +168,7 @@ public class EmailManager {
         try {
 
             this.receiveStore = session.getStore("imaps");
-            this.receiveStore.connect("imap.googlemail.com", 993, username, password);
+            this.receiveStore.connect("imap.gmail.com", 993, username, password);
             return true;
         } catch (MessagingException e) {
             System.out.println("Password incorrect, please try again; " + e.getMessage());
@@ -228,7 +228,7 @@ public class EmailManager {
             this.Authenticate();
 
         if (!this.receiveStore.isConnected())
-            this.receiveStore.connect("imap.googlemail.com", 993, this.username, this.password);
+            this.receiveStore.connect("imap.gmail.com", 993, this.username, this.password);
 
         Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
 
