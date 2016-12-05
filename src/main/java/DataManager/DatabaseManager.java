@@ -2,7 +2,6 @@ package DataManager;
 
 import JooqORM.tables.records.StockRecord;
 import PriceMonitor.PriceMonitor;
-import PriceMonitor.stock.StockItem;
 import org.jooq.*;
 import org.jooq.impl.DSL;
 import org.junit.Assert;
@@ -20,6 +19,8 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -169,9 +170,11 @@ public class DatabaseManager extends DataManager{
                 }
 
                 synchronized(PriceMonitor.stockPriceMap) {
-                    StockItem stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
-                    if (stockItem != null)
-                        sharedStock.setReportDate(stockItem.getEarningReportDate().get().toString());
+                    StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
+                    if (stockItem != null) {
+                        sharedStock.setReportDate(stockItem.getReportDate());
+//                        if (sharedStock.getTimestamp()>stockItem.)
+                    }
                 }
 
                 // Store this record back to the database using an UPDATE statement.
@@ -181,8 +184,8 @@ public class DatabaseManager extends DataManager{
             } else {
                 // Else, insert this row
                 this.getDBJooqCreate().insertInto(STOCK,
-                        STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST)
-                        .values(order.Symbol, order.Shares, order.Price).execute();
+                        STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST, STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME, STOCK.TIMESTAMP)
+                        .values(order.Symbol, order.Shares, order.Price, Timestamp.valueOf(LocalDateTime.now()), Timestamp.valueOf(LocalDateTime.now())).execute();
 
                 StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
                 Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
@@ -193,7 +196,7 @@ public class DatabaseManager extends DataManager{
         }
     }
 
-    public void writeReportDate(StockItem[] stockItems) throws Exception{
+    public void writeReportDate(StockRecord[] stockItems) throws Exception{
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -205,12 +208,12 @@ public class DatabaseManager extends DataManager{
 
 
             // Check each email order
-            for (StockItem stockItem : stockItems) {
-                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.Symbol));
+            for (StockRecord stockItem : stockItems) {
+                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.getSymbol()));
 
                 // If in table, update row
                 if (updatedStock != null) {
-                    updatedStock.setReportDate(stockItem.getEarningReportDate().get().toString());
+                    updatedStock.setReportDate(stockItem.getReportDate());
 
                     // Store this record back to the database using an UPDATE statement.
                     // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
@@ -220,9 +223,9 @@ public class DatabaseManager extends DataManager{
                     // Else, insert this row
                     this.getDBJooqCreate().insertInto(STOCK,
                             STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST, STOCK.REPORT_DATE)
-                            .values(stockItem.Symbol, stockItem.Shares, stockItem.Price, stockItem.getEarningReportDate().get().toString()).execute();
+                            .values(stockItem.getSymbol(), stockItem.getShares(), stockItem.getTargetPrice(), stockItem.getReportDate()).execute();
 
-                    StockRecord result = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.Symbol));
+                    StockRecord result = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.getSymbol()));
                     Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
                 }
             }

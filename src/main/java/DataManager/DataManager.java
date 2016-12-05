@@ -2,15 +2,12 @@ package DataManager;
 
 import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
-import JooqORM.tables.Stock;
 import JooqORM.tables.records.StockRecord;
 import PriceMonitor.PriceMonitor;
-import PriceMonitor.stock.StockItem;
 import Utility.RetryManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,7 +29,7 @@ public abstract class DataManager {
     /**
      * Get ne queried stock items function
      */
-    protected Supplier<StockItem[]> getNewQueriedStockItemsFunc;
+    protected Supplier<StockRecord[]> getNewQueriedStockItemsFunc;
 
     protected EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
 
@@ -44,7 +41,7 @@ public abstract class DataManager {
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockItem[]> getNewQueriedStockItemsFunc) throws IOException {
+    public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
             DataManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
@@ -102,16 +99,16 @@ public abstract class DataManager {
     private void updateReportDateToDatabase() throws Exception{
 
         synchronized(PriceMonitor.stockPriceMap) {
-            if(PriceMonitor.stockPriceMap.values().stream().anyMatch(stockitem -> stockitem.getEarningReportDate().isPresent()))
+            if(PriceMonitor.stockPriceMap.values().stream().anyMatch(stockitem -> stockitem.getReportDate() != null))
             {
-                StockItem[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getEarningReportDate().isPresent()).toArray(size -> new StockItem[size]);
+                StockRecord[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getReportDate() != null).toArray(size -> new StockRecord[size]);
                 this.writeReportDate(stockItems);
             }
         }
 
     }
 
-    protected abstract void writeReportDate(StockItem[] stockItems) throws Exception;
+    protected abstract void writeReportDate(StockRecord[] stockItems) throws Exception;
 
     private static final String OrderToBuyString = "Your market order to buy";
     private static final String OrderToSellString = "Your market order to sell";

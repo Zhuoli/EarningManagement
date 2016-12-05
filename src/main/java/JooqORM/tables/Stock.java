@@ -8,6 +8,7 @@ import JooqORM.Earningmanagerdb;
 import JooqORM.Keys;
 import JooqORM.tables.records.StockRecord;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Stock extends TableImpl<StockRecord> {
 
-    private static final long serialVersionUID = -2063172785;
+    private static final long serialVersionUID = -29978208;
 
     /**
      * The reference instance of <code>EarningManagerDB.stock</code>
@@ -55,9 +56,19 @@ public class Stock extends TableImpl<StockRecord> {
     public final TableField<StockRecord, String> SYMBOL = createField("symbol", org.jooq.impl.SQLDataType.VARCHAR.length(255).nullable(false), this, "");
 
     /**
+     * The column <code>EarningManagerDB.stock.current_price</code>.
+     */
+    public final TableField<StockRecord, Double> CURRENT_PRICE = createField("current_price", org.jooq.impl.SQLDataType.FLOAT, this, "");
+
+    /**
+     * The column <code>EarningManagerDB.stock.current_price_latest_update_time</code>.
+     */
+    public final TableField<StockRecord, Timestamp> CURRENT_PRICE_LATEST_UPDATE_TIME = createField("current_price_latest_update_time", org.jooq.impl.SQLDataType.TIMESTAMP.nullable(false), this, "");
+
+    /**
      * The column <code>EarningManagerDB.stock.report_date</code>.
      */
-    public final TableField<StockRecord, String> REPORT_DATE = createField("report_date", org.jooq.impl.SQLDataType.VARCHAR.length(255), this, "");
+    public final TableField<StockRecord, Timestamp> REPORT_DATE = createField("report_date", org.jooq.impl.SQLDataType.TIMESTAMP, this, "");
 
     /**
      * The column <code>EarningManagerDB.stock.shared_average_cost</code>.
@@ -73,6 +84,11 @@ public class Stock extends TableImpl<StockRecord> {
      * The column <code>EarningManagerDB.stock.target_price</code>.
      */
     public final TableField<StockRecord, Double> TARGET_PRICE = createField("target_price", org.jooq.impl.SQLDataType.FLOAT, this, "");
+
+    /**
+     * The column <code>EarningManagerDB.stock.timestamp</code>.
+     */
+    public final TableField<StockRecord, Timestamp> TIMESTAMP = createField("timestamp", org.jooq.impl.SQLDataType.TIMESTAMP.nullable(false), this, "");
 
     /**
      * Create a <code>EarningManagerDB.stock</code> table reference
