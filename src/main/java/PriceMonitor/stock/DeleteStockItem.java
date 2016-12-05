@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * Created by zhuoli on 7/16/16.
+ * StockItem on Cache.
  */
-public class StockItem {
+public class DeleteStockItem {
 
     // Stock Symbol
     public String Symbol;
@@ -38,7 +38,7 @@ public class StockItem {
      * @param averageCost: Should always be greater than zero
      * @param shares:      Should always be greater or equal to zero
      */
-    public StockItem(String symbol, double averageCost, int shares, double oneYearTargetNasdaq) {
+    public DeleteStockItem(String symbol, double averageCost, int shares, double oneYearTargetNasdaq) {
         this.Symbol = symbol;
         this.AverageCost = averageCost;
         this.Shares = shares;

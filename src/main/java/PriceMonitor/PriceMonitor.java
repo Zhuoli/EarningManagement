@@ -3,14 +3,11 @@ package PriceMonitor;
 import JooqORM.tables.Stock;
 import JooqORM.tables.records.StockRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
-import PriceMonitor.stock.StockItem;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,7 +23,7 @@ public class PriceMonitor {
      * Key: Symbol
      * Value: StockItem
      */
-    public static Map<String, StockItem> stockPriceMap;
+    public static Map<String, StockRecord> stockPriceMap;
 
 
     public PriceMonitor() {
@@ -38,8 +35,8 @@ public class PriceMonitor {
      *
      * @return
      */
-    public static StockItem[] GetStocks() {
-        return PriceMonitor.stockPriceMap.values().toArray(new StockItem[0]);
+    public static StockRecord[] GetStocks() {
+        return PriceMonitor.stockPriceMap.values().toArray(new StockRecord[0]);
     }
 
     /**
@@ -62,11 +59,21 @@ public class PriceMonitor {
 
                 // Update stock mapper
                 if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
-                    StockItem item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Stock.STOCK.SYMBOL));
-                    item.AverageCost = averageCost;
-                    item.Shares = number;
+                    StockRecord item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Stock.STOCK.SYMBOL));
+                    item.setSharedAverageCost(averageCost);
+                    item.setShares(number);
                 } else {
-                    PriceMonitor.stockPriceMap.put(symbol, new StockItem(symbol, averageCost, number, targetPriceNasdaq));
+                    PriceMonitor.stockPriceMap.put(
+                            symbol,
+                            new StockRecord(
+                                    symbol,
+                                    Double.valueOf(0),
+                                    Timestamp.valueOf(LocalDateTime.MIN),
+                                    Timestamp.valueOf(LocalDateTime.MIN),
+                                    averageCost,
+                                    number,
+                                    targetPriceNasdaq,
+                                    Timestamp.valueOf(LocalDateTime.now())));
                 }
             }
 
@@ -92,26 +99,28 @@ public class PriceMonitor {
             while (shouldContinue) {
                 // Lock the map for multi thread safe
                 //System.out.println("PriceMonitor acquired lock: stockPriceMap");
-                for (StockItem stockItem : PriceMonitor.stockPriceMap.values()) {
+                for (StockRecord stockItem : PriceMonitor.stockPriceMap.values()) {
 
                     try {
-                        stockItem.Price = parser.QuoteSymbolePrice(stockItem.Symbol);
+                        stockItem.setCurrentPrice(parser.QuoteSymbolePrice(stockItem.getSymbol()));
 
-                        stockItem.LastUpdateTime = LocalDateTime.now();
+                        stockItem.setCurrentPriceLatestUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
 
                         // Sleep a while to avoid access limit
                         Thread.sleep(500);
                     } catch (Exception exc) {
-                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.Symbol);
+                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.getSymbol());
                         System.err.println(line);
                         System.err.print(exc.getMessage());
                     }
 
-                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.Symbol);
+                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.getSymbol());
+
+                    LocalDate l = localDate.get();
 
                     // Update earning report date
                     if (localDate.isPresent()) {
-                        stockItem.setEarningReportDate(localDate.get());
+                        stockItem.setReportDate(Timestamp.valueOf(l.atStartOfDay()));
                     }
                 }
 

@@ -2,11 +2,10 @@ package ResultPublisher;
 
 import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
-import PriceMonitor.stock.StockItem;
+import JooqORM.tables.records.StockRecord;
 import com.joanzapata.utils.Strings;
 
 import javax.mail.NoSuchProviderException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.function.Supplier;
@@ -21,9 +20,9 @@ public class ResultPublisher {
 
     EmailManager emailUser = null;
 
-    Supplier<StockItem[]> getStocksFuc;
+    Supplier<StockRecord[]> getStocksFuc;
 
-    private ResultPublisher(Supplier<StockItem[]> getStocksFuc) {
+    private ResultPublisher(Supplier<StockRecord[]> getStocksFuc) {
         this.getStocksFuc = getStocksFuc;
     }
 
@@ -32,7 +31,7 @@ public class ResultPublisher {
      *
      * @return
      */
-    public static ResultPublisher GetInstance(Supplier<StockItem[]> getStocksFuc) {
+    public static ResultPublisher GetInstance(Supplier<StockRecord[]> getStocksFuc) {
 
         return new ResultPublisher(getStocksFuc);
     }
@@ -59,7 +58,7 @@ public class ResultPublisher {
             while (true) {
 
                 // Get stock prices for each data item
-                StockItem[] stockItems = this.getStocksFuc.get();
+                StockRecord[] stockItems = this.getStocksFuc.get();
 
                 // Skip if items are null or empty
                 if (stockItems == null || stockItems.length == 0) {
@@ -106,32 +105,32 @@ public class ResultPublisher {
         }
     }
 
-    private String GenerateQuartelyReportDate(StockItem[] stockItems) {
+    private String GenerateQuartelyReportDate(StockRecord[] stockItems) {
         StringBuilder sb = new StringBuilder();
-        for (StockItem item : stockItems) {
-            if (item.getEarningReportDate().isPresent()) {
-                LocalDate earningReportdate = item.getEarningReportDate().get();
-                sb.append(String.format("%1$-8s quarterly earning report date: %2$s ", item.Symbol, earningReportdate));
+        for (StockRecord item : stockItems) {
+            if (item.getReportDate() != null) {
+                LocalDateTime earningReportdate = item.getReportDate().toLocalDateTime();
+                sb.append(String.format("%1$-8s quarterly earning report date: %2$s ", item.getSymbol(), earningReportdate));
                 sb.append(System.lineSeparator());
             }
         }
         return sb.toString();
     }
 
-    private String GenerateLatestPriceReport(StockItem[] stockItems) {
+    private String GenerateLatestPriceReport(StockRecord[] stockItems) {
         StringBuilder sb = new StringBuilder();
-        for (StockItem item : stockItems) {
+        for (StockRecord item : stockItems) {
             // String Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
             String line = String.format("Symbol: %1$-8s Price: %2$6.2f Shares: %3$4d Earning: %4$8.2f %5$s",
-                    item.Symbol, item.Price, item.Shares, (item.Price - item.AverageCost) * item.Shares, System.lineSeparator());
+                    item.getSymbol(), item.getCurrentPrice(), item.getShares(), (item.getCurrentPrice() - item.getSharedAverageCost()) * item.getShares(), System.lineSeparator());
             sb.append(line);
         }
         return sb.toString();
     }
 
-    private String GenerateEarningReport(StockItem[] stockItems) {
-        double baseValue = Arrays.stream(stockItems).map(item -> item.AverageCost * item.Shares).reduce((a, b) -> a + b).get();
-        double currentValue = Arrays.stream(stockItems).map(item -> item.Price * item.Shares).reduce((a, b) -> a + b).get();
+    private String GenerateEarningReport(StockRecord[] stockItems) {
+        double baseValue = Arrays.stream(stockItems).map(item -> item.getSharedAverageCost() * item.getShares()).reduce((a, b) -> a + b).get();
+        double currentValue = Arrays.stream(stockItems).map(item -> item.getCurrentPrice() * item.getShares()).reduce((a, b) -> a + b).get();
         StringBuilder earningStringBuilder = new StringBuilder();
         earningStringBuilder.append(String.format("Buying price: %.2f" + System.lineSeparator(), baseValue));
         earningStringBuilder.append(String.format("Current value: %.2f" + System.lineSeparator(), currentValue));
