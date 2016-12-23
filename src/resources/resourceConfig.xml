@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EarningManagerConfigure>
     <Emails id="Emails" type="xs:ID">
-        <User>digitcurrencymonitor@gmail.com</User>
-        <Password>gsbsEf*Y2TKwkhje7xeq</Password>
+        <User>earningmanagerseattle@yahoo.com</User>
+        <Password>xcPUG7No</Password>
         <Recipient>robotonyszu@gmail.com</Recipient>
     </Emails>
     <Databases id="Databases" type="xs:ID">

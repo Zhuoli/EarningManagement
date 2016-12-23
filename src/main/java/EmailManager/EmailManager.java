@@ -140,7 +140,7 @@ public class EmailManager {
 
         // Initialize Send Session
         Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.host", "smtp.mail.yahoo.com");
         props.put("mail.smtp.socketFactory.port", "465");
         props.put("mail.smtp.socketFactory.class",
                 "javax.net.ssl.SSLSocketFactory");
@@ -164,14 +164,17 @@ public class EmailManager {
      * @return
      */
     public boolean EmailAuthenticate(String username, String password) {
+        if (username.contains("@")){
+            username = username.split("@")[0];
+        }
         Session session = Session.getInstance(new Properties());
         try {
 
             this.receiveStore = session.getStore("imaps");
-            this.receiveStore.connect("imap.gmail.com", 993, username, password);
+            this.receiveStore.connect("imap.mail.yahoo.com", 993, username, password);
             return true;
         } catch (MessagingException e) {
-            System.out.println("Password incorrect, please try again; " + e.getMessage());
+            System.out.println("Password incorrect, please try again. inner message '" + e.getMessage()+"'");
         } finally {
             if (this.receiveStore != null)
                 try {
@@ -228,7 +231,7 @@ public class EmailManager {
             this.Authenticate();
 
         if (!this.receiveStore.isConnected())
-            this.receiveStore.connect("imap.gmail.com", 993, this.username, this.password);
+            this.receiveStore.connect("imap.mail.yahoo.com", 993, this.username, this.password);
 
         Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
 
