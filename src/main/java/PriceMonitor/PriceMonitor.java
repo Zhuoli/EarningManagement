@@ -68,8 +68,8 @@ public class PriceMonitor {
                             new StockRecord(
                                     symbol,
                                     Double.valueOf(0),
-                                    Timestamp.valueOf(LocalDateTime.MIN),
-                                    Timestamp.valueOf(LocalDateTime.MIN),
+                                    Timestamp.valueOf(LocalDateTime.of(1900, 1, 1, 0,0,0)),
+                                    Timestamp.valueOf(LocalDateTime.of(1900, 1, 1, 0,0,0)),
                                     averageCost,
                                     number,
                                     targetPriceNasdaq,
