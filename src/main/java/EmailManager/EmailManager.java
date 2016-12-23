@@ -127,8 +127,7 @@ public class EmailManager {
             if (this.username == null || this.username.isEmpty() || this.password == null || this.password.isEmpty()) {
 
                 // Loop until authentication succeed or exception raised
-                System.out.println("Email:" + username);
-                System.out.print("Password:");
+                System.out.println("Email:" + username + "\nPassword:");
                 this.password = String.valueOf(scan.nextLine());
             }
             this.isAuthenticated = this.EmailAuthenticate(this.username, this.password);
@@ -174,7 +173,7 @@ public class EmailManager {
             this.receiveStore.connect("imap.mail.yahoo.com", 993, username, password);
             return true;
         } catch (MessagingException e) {
-            System.out.println("Password incorrect, please try again. inner message '" + e.getMessage()+"'");
+            System.err.println("Password incorrect, please try again. inner message '" + e.getMessage()+"'");
         } finally {
             if (this.receiveStore != null)
                 try {
