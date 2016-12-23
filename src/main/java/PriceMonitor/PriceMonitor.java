@@ -116,11 +116,9 @@ public class PriceMonitor {
 
                     Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.getSymbol());
 
-                    LocalDate l = localDate.get();
-
                     // Update earning report date
                     if (localDate.isPresent()) {
-                        stockItem.setReportDate(Timestamp.valueOf(l.atStartOfDay()));
+                        stockItem.setReportDate(Timestamp.valueOf(localDate.get().atStartOfDay()));
                     }
                 }
 
