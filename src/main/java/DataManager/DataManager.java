@@ -43,7 +43,7 @@ public abstract class DataManager {
      */
     public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc) throws IOException {
         try {
-            DataManager manager = DatabaseManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
+            DataManager manager = MySqlDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
             return manager;
@@ -61,7 +61,7 @@ public abstract class DataManager {
     public abstract List<StockRecord> ReadSharedStocks() throws Exception ;
 
     /**
-     * To be override by the subclass.
+     * Write shares back to database.
      * @param orders
      */
     public abstract void WriteSharedStocks(Order[] orders) throws Exception ;
