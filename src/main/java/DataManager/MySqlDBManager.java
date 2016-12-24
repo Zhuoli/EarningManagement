@@ -128,8 +128,8 @@ public class MySqlDBManager extends DataManager {
         if (this.conn != null && !this.conn.isClosed() && this.globalCreate != null)
             return this.globalCreate;
 
-        Connection conn = DriverManager.getConnection(this.url, this.userName, this.password);
-        this.globalCreate = DSL.using(conn, SQLDialect.MYSQL);
+        this.conn = DriverManager.getConnection(this.url, this.userName, this.password);
+        this.globalCreate = DSL.using(this.conn, SQLDialect.MYSQL);
         Optional<Table<?>> table = this.GetTable(this.globalCreate, STOCK.getName());
         if (!table.isPresent()) {
             this.globalCreate.createTable(STOCK).columns(STOCK.fields()).execute();
@@ -141,7 +141,11 @@ public class MySqlDBManager extends DataManager {
     /**
      * Write shares back to mysql database.
      */
-    public void WriteSharedStocks(Order[] orders) throws Exception {
+    public void recordSharedStocks(Order[] orders) throws Exception {
+
+        if (orders.length == 0)
+            return;
+
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -216,12 +220,6 @@ public class MySqlDBManager extends DataManager {
                 updatedStockRecord = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
                 Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStockRecord);
                 dbStockMap.put(updatedStockRecord.getSymbol(), updatedStockRecord);
-                StockRecord updatedStock =
-                        this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
-                Assert.assertNotNull("Failed to write stock instance back to Database table",
-                        updatedStock);
-                stockMap.put(updatedStock.getSymbol(), updatedStock);
-
                 System.out.println("New row inserted " + order);
             }
 
@@ -278,6 +276,21 @@ public class MySqlDBManager extends DataManager {
         }
     }
 
+    @Override
+    public void updateCurrentPrice(StockRecord[] stockRecords) throws java.lang.Exception{
+        for(StockRecord stockRecord : stockRecords){
+            if(stockRecord.getCurrentPrice()==0)
+                continue;
+            this.getDBJooqCreate()
+                    .update(STOCK)
+                    .set(STOCK.CURRENT_PRICE, stockRecord.getCurrentPrice())
+                    .set(STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME, stockRecord.getCurrentPriceLatestUpdateTime())
+                    .where(STOCK.SYMBOL.equal(stockRecord.getSymbol()))
+                    .execute();
+
+        }
+    }
+
     /**
      * Update shared stock database row, if new bought of this stock Symbol, insert new row, else
      * update the existing row, delete this row if it's close out.
@@ -330,7 +343,7 @@ public class MySqlDBManager extends DataManager {
     }
 
     @Override
-    public List<StockRecord> ReadSharedStocks() throws java.lang.Exception {
+    public List<StockRecord> RetriveSharedStocks() throws java.lang.Exception {
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {

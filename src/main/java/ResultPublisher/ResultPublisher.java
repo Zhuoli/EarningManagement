@@ -38,6 +38,7 @@ public class ResultPublisher {
 
     /**
      * Authenticate
+     *
      * @return
      * @throws NoSuchProviderException
      */
@@ -53,56 +54,66 @@ public class ResultPublisher {
      * Entry of result publisher thread.
      */
     public void Start() {
-        try
-        {
+        try {
+            int errorCount = 0;
             while (true) {
-
-                // Get stock prices for each data item
-                StockRecord[] stockItems = this.getStocksFuc.get();
-
-                // Skip if items are null or empty
-                if (stockItems == null || stockItems.length == 0) {
-                    System.out.println("Items are null or empty, sleep a while...");
-                    Thread.sleep(10 * 1000);
-                    continue;
+                try {
+                    this.threadTask();
+                    errorCount = 0;
+                } catch (Exception e) {
+                    if (++errorCount == 3)
+                        throw e;
                 }
-
-                StringBuilder reportBuilder = new StringBuilder();
-
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append(Strings.format("*************** Stock Report on {date} ***************").with("date", LocalDateTime.now().toString()).build());
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append("Stock Price Table:");
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append(this.GenerateLatestPriceReport(stockItems));
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append("Earning Report Date:");
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append(this.GenerateQuartelyReportDate(stockItems));
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append("-------------------------Summary------------------------------");
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append(this.GenerateEarningReport(stockItems));
-                reportBuilder.append(System.lineSeparator());
-                reportBuilder.append("**************************************************************");
-
-                System.out.println(reportBuilder.toString());
-
-                MonitorEmail[] emails = this.emailUser.ReceiveEmailsFrom(EmailManager.getEmailRecipient(), false);
-
-                if (emails != null && emails.length > 0) {
-                    this.emailUser.Send(EmailManager.getEmailRecipient(), "Stock Report", reportBuilder.toString());
-                    System.out.println("Report sent to: " + EmailManager.getEmailRecipient());
-                }
-
-                // Buying value
-                Thread.sleep(5 * 1000);
             }
         } catch (InterruptedException exc) {
             Logger.getGlobal().severe("Price Prophet thread Interrupted: " + exc.getMessage());
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "ResultPublisher thread crashed.", exc);
         }
+    }
+
+    private void threadTask() throws Exception {
+
+        // Get stock prices for each data item
+        StockRecord[] stockItems = this.getStocksFuc.get();
+
+        // Skip if items are null or empty
+        if (stockItems == null || stockItems.length == 0) {
+            System.out.println("Items are null or empty, sleep a while...");
+            Thread.sleep(10 * 1000);
+            return;
+        }
+
+        StringBuilder reportBuilder = new StringBuilder();
+
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append(Strings.format("*************** Stock Report on {date} ***************").with("date", LocalDateTime.now().toString()).build());
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append("Stock Price Table:");
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append(this.GenerateLatestPriceReport(stockItems));
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append("Earning Report Date:");
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append(this.GenerateQuartelyReportDate(stockItems));
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append("-------------------------Summary------------------------------");
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append(this.GenerateEarningReport(stockItems));
+        reportBuilder.append(System.lineSeparator());
+        reportBuilder.append("**************************************************************");
+
+        System.out.println(reportBuilder.toString());
+
+        MonitorEmail[] emails = this.emailUser.ReceiveEmailsFrom(EmailManager.getEmailRecipient(), false);
+
+        if (emails != null && emails.length > 0) {
+            this.emailUser.Send(EmailManager.getEmailRecipient(), "Stock Report", reportBuilder.toString());
+            System.out.println("Report sent to: " + EmailManager.getEmailRecipient());
+        }
+
+        // Buying value
+        Thread.sleep(5 * 1000);
     }
 
     private String GenerateQuartelyReportDate(StockRecord[] stockItems) {
@@ -121,7 +132,7 @@ public class ResultPublisher {
         StringBuilder sb = new StringBuilder();
         for (StockRecord item : stockItems) {
 
-            if (item.getCurrentPrice()==null || item.getShares() == null || item.getSharedAverageCost() == null)
+            if (item.getCurrentPrice() == null || item.getShares() == null || item.getSharedAverageCost() == null)
                 continue;
 
             // String Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
@@ -133,8 +144,8 @@ public class ResultPublisher {
     }
 
     private String GenerateEarningReport(StockRecord[] stockItems) {
-        double baseValue = Arrays.stream(stockItems).filter(item -> item.getSharedAverageCost()!=null && item.getShares()!=null).map(item -> item.getSharedAverageCost() * item.getShares()).reduce((a, b) -> a + b).get();
-        double currentValue = Arrays.stream(stockItems).filter(item -> item.getCurrentPrice()!=null && item.getShares()!=null).map(item -> item.getCurrentPrice() * item.getShares()).reduce((a, b) -> a + b).get();
+        double baseValue = Arrays.stream(stockItems).filter(item -> item.getSharedAverageCost() != null && item.getShares() != null).map(item -> item.getSharedAverageCost() * item.getShares()).reduce((a, b) -> a + b).get();
+        double currentValue = Arrays.stream(stockItems).filter(item -> item.getCurrentPrice() != null && item.getShares() != null).map(item -> item.getCurrentPrice() * item.getShares()).reduce((a, b) -> a + b).get();
         StringBuilder earningStringBuilder = new StringBuilder();
         earningStringBuilder.append(String.format("Buying price: %.2f" + System.lineSeparator(), baseValue));
         earningStringBuilder.append(String.format("Current value: %.2f" + System.lineSeparator(), currentValue));
