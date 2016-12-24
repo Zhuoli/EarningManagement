@@ -40,7 +40,7 @@ public class PriceMonitor {
     }
 
     /**
-     *  Register symbols to price monitor
+     * Register symbols to price monitor or update the average cost and number and targetPrice of existing stock.
      */
     public static void RegisterStockSymboles(StockRecord boughtStockItem) {
 
@@ -68,7 +68,7 @@ public class PriceMonitor {
                             new StockRecord(
                                     symbol,
                                     Double.valueOf(0),
-                                    Timestamp.valueOf(LocalDateTime.of(1900, 1, 1, 0,0,0)),
+                                    Timestamp.valueOf(LocalDateTime.of(1900, 1, 1, 0, 0, 0)),
                                     null,
                                     averageCost,
                                     number,
@@ -90,36 +90,21 @@ public class PriceMonitor {
      */
     public void Start() throws InterruptedException {
 
-        NasdaqWebParser parser = new NasdaqWebParser();
+        NasdaqWebParser nasdaqWebParser = new NasdaqWebParser();
 
         boolean shouldContinue = true;
 
         try {
 
+            int errorCount = 0;
             while (shouldContinue) {
-                // Lock the map for multi thread safe
-                //System.out.println("PriceMonitor acquired lock: stockPriceMap");
-                for (StockRecord stockItem : PriceMonitor.stockPriceMap.values()) {
-
-                    try {
-                        stockItem.setCurrentPrice(parser.QuoteSymbolePrice(stockItem.getSymbol()));
-
-                        stockItem.setCurrentPriceLatestUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
-
-                        // Sleep a while to avoid access limit
-                        Thread.sleep(500);
-                    } catch (Exception exc) {
-                        String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.getSymbol());
-                        System.err.println(line);
-                        System.err.print(exc.getMessage());
-                    }
-
-                    Optional<LocalDate> localDate = parser.QupteEarningReportDate(stockItem.getSymbol());
-
-                    // Update earning report date
-                    if (localDate.isPresent()) {
-                        stockItem.setReportDate(Timestamp.valueOf(localDate.get().atStartOfDay()));
-                    }
+                try {
+                    this.task(nasdaqWebParser);
+                    // Reset error count
+                    errorCount = 0;
+                } catch (Exception e) {
+                    if (++errorCount == 3)
+                        throw e;
                 }
 
                 // Sleep a whole
@@ -130,5 +115,31 @@ public class PriceMonitor {
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "PriceMonitor crashed.", exc);
         }
+    }
+
+    private void task(NasdaqWebParser nasdaqWebParser) throws Exception {
+        for (StockRecord stockItem : PriceMonitor.stockPriceMap.values()) {
+
+            try {
+                stockItem.setCurrentPrice(nasdaqWebParser.QuoteSymbolePrice(stockItem.getSymbol()));
+
+                stockItem.setCurrentPriceLatestUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
+
+                // Sleep a while to avoid access limit
+                Thread.sleep(500);
+            } catch (Exception exc) {
+                String line = String.format("Symbol: %1$-8s Price: UNKNOWN", stockItem.getSymbol());
+                System.err.println(line);
+                System.err.print(exc.getMessage());
+            }
+
+            Optional<LocalDate> localDate = nasdaqWebParser.QupteEarningReportDate(stockItem.getSymbol());
+
+            // Update earning report date
+            if (localDate.isPresent()) {
+                stockItem.setReportDate(Timestamp.valueOf(localDate.get().atStartOfDay()));
+            }
+        }
+
     }
 }

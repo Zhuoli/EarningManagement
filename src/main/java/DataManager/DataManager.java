@@ -8,6 +8,7 @@ import Utility.RetryManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -33,8 +34,7 @@ public abstract class DataManager {
 
     protected EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
 
-    protected DataManager()
-    {
+    protected DataManager() {
 
     }
 
@@ -54,18 +54,6 @@ public abstract class DataManager {
         return null;
     }
 
-    /**
-     * To be override.
-     * @return
-     */
-    public abstract List<StockRecord> ReadSharedStocks() throws Exception ;
-
-    /**
-     * Write shares back to database.
-     * @param orders
-     */
-    public abstract void WriteSharedStocks(Order[] orders) throws Exception ;
-
 
     // Start thread
     public void Start() {
@@ -73,18 +61,17 @@ public abstract class DataManager {
 
             MonitorEmail[] seenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", true);
             Order[] seenOrders = this.CheckForNewOrdersPlaced(seenRobinHoodEmails);
-            this.WriteSharedStocks(seenOrders);
+            this.recordSharedStocks(seenOrders);
 
+            int errorCount = 0;
             while (true) {
-                // Register stocks queried from database
-                this.ReadSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
-                MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
-                Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
-
-                this.WriteSharedStocks(newOrders);
-
-                this.updateReportDateToDatabase();
-
+                try {
+                    this.task();
+                    errorCount = 0;
+                } catch (Exception e) {
+                    if (++errorCount == 3)
+                        throw e;
+                }
                 Thread.sleep(5 * 1000);
             }
         } catch (SQLException sqlexc) {
@@ -96,16 +83,48 @@ public abstract class DataManager {
         }
     }
 
-    private void updateReportDateToDatabase() throws Exception{
+    private void task() throws Exception {
+        // Write/Override shares from Database back to memory cache
+        this.RetriveSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
+        MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
+        Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
 
-        synchronized(PriceMonitor.stockPriceMap) {
-            if(PriceMonitor.stockPriceMap.values().stream().anyMatch(stockitem -> stockitem.getReportDate() != null))
-            {
-                StockRecord[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getReportDate() != null).toArray(size -> new StockRecord[size]);
-                this.writeReportDate(stockItems);
-            }
+        this.recordSharedStocks(newOrders);
+
+        this.updateReportDateToDatabase();
+
+        this.updateCurrentPrice(this.getNewQueriedStockItemsFunc.get());
+
+    }
+
+    /**
+     * Get shared stocks from Database.
+     *
+     * @return
+     */
+    public abstract List<StockRecord> RetriveSharedStocks() throws Exception;
+
+    /**
+     * Write shares back to memory cache and database.
+     *
+     * @param orders
+     */
+    public abstract void recordSharedStocks(Order[] orders) throws Exception;
+
+    /**
+     * Updates current price to database.
+     *
+     * @throws java.lang.Exception
+     */
+    public abstract void updateCurrentPrice(StockRecord[] stockRecords) throws java.lang.Exception;
+
+    private void updateReportDateToDatabase() throws Exception {
+
+        StockRecord[] stockRecords = this.getNewQueriedStockItemsFunc.get();
+        if (Arrays.stream(stockRecords).anyMatch(stockitem -> stockitem.getReportDate() != null)) {
+            StockRecord[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getReportDate() != null).toArray(size -> new StockRecord[size]);
+            this.writeReportDate(stockItems);
         }
-
     }
 
     protected abstract void writeReportDate(StockRecord[] stockItems) throws Exception;
@@ -115,6 +134,7 @@ public abstract class DataManager {
 
     /**
      * Query email box to see if has new stock order been placed.
+     *
      * @return orders.
      */
     private Order[] CheckForNewOrdersPlaced(MonitorEmail[] robinhoodEmails) {
@@ -123,7 +143,7 @@ public abstract class DataManager {
             // Execute each email from robinhood
             for (MonitorEmail email : robinhoodEmails) {
                 Order order = new RetryManager<>(this::ParseEmail).Execute(email);
-                if (order != null){
+                if (order != null) {
                     orders.add(order);
                 }
             }
@@ -140,8 +160,7 @@ public abstract class DataManager {
         OrderType orderType = OrderType.BUY;
 
         // Buying order
-        if (email.Content.contains(DataManager.OrderToBuyString))
-        {
+        if (email.Content.contains(DataManager.OrderToBuyString)) {
             int index = email.Content.indexOf(DataManager.OrderToBuyString);
             orderType = OrderType.BUY;
             String sharesString = paragraph.substring(index + DataManager.OrderToBuyString.length(), paragraph.indexOf(" share")).trim();
@@ -149,14 +168,12 @@ public abstract class DataManager {
         }
 
         // Selling order
-        else if(email.Content.contains(DataManager.OrderToSellString))
-        {
+        else if (email.Content.contains(DataManager.OrderToSellString)) {
             int index = email.Content.indexOf(DataManager.OrderToSellString);
             orderType = OrderType.SELL;
             String sharesString = paragraph.substring(index + DataManager.OrderToSellString.length(), paragraph.indexOf(" share")).trim();
             shares = Integer.parseInt(sharesString);
-        }
-        else{
+        } else {
             Logger.getGlobal().warning("Failed to parse order type : " + email.Content);
             return null;
         }
@@ -168,7 +185,7 @@ public abstract class DataManager {
 
         int symbolIndex = paragraph.indexOf("was executed at");
         String[] words = paragraph.substring(0, symbolIndex).trim().split(" ");
-        String symbol = words[words.length-1];
+        String symbol = words[words.length - 1];
 
 
         // Get price

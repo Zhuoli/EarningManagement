@@ -241,6 +241,9 @@ public class EmailManager {
             /*  Get the messages which is unread in the Inbox*/
             Message messages[] = infolder.search(new FlagTerm(new Flags(Flags.Flag.SEEN), isSeen));
 
+            if (!infolder.isOpen())
+                infolder.open(Folder.READ_ONLY);
+
             for (Message msg : messages) {
                 try {
                     // Reopen folder if close
