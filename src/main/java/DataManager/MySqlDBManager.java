@@ -31,13 +31,10 @@ import java.util.stream.Collectors;
 
 import static JooqORM.Tables.STOCK;
 
-
 /**
- * MYSql Connector and Executor.
- * Created by zhuolil on 8/17/16.
+ * MYSql Connector and Executor. Created by zhuolil on 8/17/16.
  */
-public class DatabaseManager extends DataManager{
-
+public class MySqlDBManager extends DataManager {
 
     private String url;
     private String userName;
@@ -46,10 +43,11 @@ public class DatabaseManager extends DataManager{
     /**
      * Initialize EmailMananger from XML configuration file.
      *
-     * @param pathString : Configuration file path
+     * @param pathString
+     *            : Configuration file path
      * @return: Emailmanager
      */
-    public static DatabaseManager GetDatabaseManagerInstance(String pathString) {
+    public static MySqlDBManager GetDatabaseManagerInstance(String pathString) {
         Path currentPath = Paths.get("./");
         System.out.println("Currrent path: " + currentPath.toAbsolutePath());
         Path path = Paths.get("src", "resources", pathString);
@@ -62,42 +60,47 @@ public class DatabaseManager extends DataManager{
 
                 // Create XML object and read values from the given path
                 DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-                Document doc = builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
+                Document doc =
+                        builder.parse(new DataInputStream(new FileInputStream(path.toFile())));
                 Element documentElement = doc.getDocumentElement();
-                Element databasesNode = (Element) documentElement.getElementsByTagName("Databases").item(0);
+                Element databasesNode =
+                        (Element) documentElement.getElementsByTagName("Databases").item(0);
 
                 String url = databasesNode.getElementsByTagName("Url").item(0).getTextContent();
-                String database = databasesNode.getElementsByTagName("Database").item(0).getTextContent();
+                String database =
+                        databasesNode.getElementsByTagName("Database").item(0).getTextContent();
                 String user = databasesNode.getElementsByTagName("User").item(0).getTextContent();
-                String password = databasesNode.getElementsByTagName("Password").item(0).getTextContent();
+                String password =
+                        databasesNode.getElementsByTagName("Password").item(0).getTextContent();
 
-                return new DatabaseManager(url, database, user, password);
+                return new MySqlDBManager(url, database, user, password);
             } catch (Exception e) {
-                Logger.getGlobal().log(Level.SEVERE, "Failed to read configuration file from " + pathString, e);
+                Logger.getGlobal().log(Level.SEVERE,
+                        "Failed to read configuration file from " + pathString, e);
             }
-            return new DatabaseManager();
+            return new MySqlDBManager();
         } else {
-            return new DatabaseManager();
+            return new MySqlDBManager();
         }
     }
 
-    public DatabaseManager Authenticate() throws SQLException {
+    public MySqlDBManager Authenticate() throws SQLException {
         return this;
     }
 
-    private DatabaseManager() {
+    private MySqlDBManager() {
         // Do nothing
     }
 
     /**
-     * Initialize DatabaseManager with the given Server Address and credential.
+     * Initialize MySqlDBManager with the given Server Address and credential.
+     * 
      * @param dbUrl
      * @param database
      * @param userName
      * @param password
      */
-    private DatabaseManager(String dbUrl, String database, String userName, String password)
-    {
+    private MySqlDBManager(String dbUrl, String database, String userName, String password) {
         Assert.assertNotNull(dbUrl);
         Assert.assertNotNull(database);
         Assert.assertNotNull(userName);
@@ -108,23 +111,19 @@ public class DatabaseManager extends DataManager{
         this.password = password;
     }
 
-    public static void main(String[] args) {
-
-    }
-
-
     private Connection conn = null;
     private DSLContext globalCreate = null;
 
     /**
      * Sets up and maintains SQL connection
+     * 
      * @return DSLContext instance
      * @throws Exception
      */
-    public DSLContext getDBJooqCreate() throws Exception{
+    public DSLContext getDBJooqCreate() throws Exception {
 
         // Reuse sql connection
-        if (this.conn!=null && !this.conn.isClosed() && this.globalCreate!=null)
+        if (this.conn != null && !this.conn.isClosed() && this.globalCreate != null)
             return this.globalCreate;
 
         Connection conn = DriverManager.getConnection(this.url, this.userName, this.password);
@@ -136,9 +135,11 @@ public class DatabaseManager extends DataManager{
         return this.globalCreate;
     }
 
-
     @Override
-    public void WriteSharedStocks(Order[] orders) throws Exception{
+    /**
+     * Write shares back to mysql database.
+     */
+    public void WriteSharedStocks(Order[] orders) throws Exception {
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -153,7 +154,9 @@ public class DatabaseManager extends DataManager{
 
         // Map query result to StockItems
         HashMap<String, StockRecord> stockMap = new HashMap<>();
-        result.stream().map(r -> (StockRecord) r).forEach(stockRecord -> stockMap.put(stockRecord.getSymbol(), stockRecord));
+        result.stream()
+                .map(r -> (StockRecord) r)
+                .forEach(stockRecord -> stockMap.put(stockRecord.getSymbol(), stockRecord));
 
         // Check each email order
         for (Order order : orders) {
@@ -163,17 +166,17 @@ public class DatabaseManager extends DataManager{
                 sharedStock = this.UpdateStockShares(sharedStock, order);
 
                 // Delete shares
-                if (sharedStock.getShares() == 0)
-                {
-                    // Deletes this record from the database, based on the value of the primary key or main unique key.
+                if (sharedStock.getShares() == 0) {
+                    // Deletes this record from the database, based on the value of the primary key
+                    // or main unique key.
                     sharedStock.delete();
                 }
 
-                synchronized(PriceMonitor.stockPriceMap) {
+                synchronized (PriceMonitor.stockPriceMap) {
                     StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
                     if (stockItem != null) {
                         sharedStock.setReportDate(stockItem.getReportDate());
-//                        if (sharedStock.getTimestamp()>stockItem.)
+                        // if (sharedStock.getTimestamp()>stockItem.)
                     }
                 }
 
@@ -183,12 +186,18 @@ public class DatabaseManager extends DataManager{
 
             } else {
                 // Else, insert this row
-                this.getDBJooqCreate().insertInto(STOCK,
-                        STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST, STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME, STOCK.TIMESTAMP)
-                        .values(order.Symbol, order.Shares, order.Price, Timestamp.valueOf(LocalDateTime.now()), Timestamp.valueOf(LocalDateTime.now())).execute();
+                this.getDBJooqCreate()
+                        .insertInto(STOCK, STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST,
+                                STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME, STOCK.TIMESTAMP)
+                        .values(order.Symbol, order.Shares, order.Price,
+                                Timestamp.valueOf(LocalDateTime.now()),
+                                Timestamp.valueOf(LocalDateTime.now()))
+                        .execute();
 
-                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
-                Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
+                StockRecord updatedStock =
+                        this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                Assert.assertNotNull("Failed to write stock instance back to Database table",
+                        updatedStock);
                 stockMap.put(updatedStock.getSymbol(), updatedStock);
 
                 System.out.println("New row inserted " + order);
@@ -196,7 +205,7 @@ public class DatabaseManager extends DataManager{
         }
     }
 
-    public void writeReportDate(StockRecord[] stockItems) throws Exception{
+    public void writeReportDate(StockRecord[] stockItems) throws Exception {
         this.getNewQueriedStockItemsFunc.get();
 
         try {
@@ -206,48 +215,57 @@ public class DatabaseManager extends DataManager{
             throw e;
         }
 
+        // Check each email order
+        for (StockRecord stockItem : stockItems) {
+            StockRecord updatedStock =
+                    this.getDBJooqCreate().fetchOne(STOCK,
+                            STOCK.SYMBOL.equal(stockItem.getSymbol()));
 
-            // Check each email order
-            for (StockRecord stockItem : stockItems) {
-                StockRecord updatedStock = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.getSymbol()));
+            // If in table, update row
+            if (updatedStock != null) {
+                updatedStock.setReportDate(stockItem.getReportDate());
 
-                // If in table, update row
-                if (updatedStock != null) {
-                    updatedStock.setReportDate(stockItem.getReportDate());
+                // Store this record back to the database using an UPDATE statement.
+                // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
+                updatedStock.update();
 
-                    // Store this record back to the database using an UPDATE statement.
-                    // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
-                    updatedStock.update();
+            } else {
+                // Else, insert this row
+                this.getDBJooqCreate()
+                        .insertInto(STOCK, STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST,
+                                STOCK.REPORT_DATE)
+                        .values(stockItem.getSymbol(), stockItem.getShares(),
+                                stockItem.getTargetPrice(), stockItem.getReportDate())
+                        .execute();
 
-                } else {
-                    // Else, insert this row
-                    this.getDBJooqCreate().insertInto(STOCK,
-                            STOCK.SYMBOL, STOCK.SHARES, STOCK.SHARED_AVERAGE_COST, STOCK.REPORT_DATE)
-                            .values(stockItem.getSymbol(), stockItem.getShares(), stockItem.getTargetPrice(), stockItem.getReportDate()).execute();
-
-                    StockRecord result = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(stockItem.getSymbol()));
-                    Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStock);
-                }
+                StockRecord result =
+                        this.getDBJooqCreate().fetchOne(STOCK,
+                                STOCK.SYMBOL.equal(stockItem.getSymbol()));
+                Assert.assertNotNull("Failed to write stock instance back to Database table",
+                        updatedStock);
             }
+        }
     }
 
     /**
-     * Update shared stock database row, if new bought of this stock Symbol, insert new row,
-     * else update the existing row, delete this row if it's close out.
+     * Update shared stock database row, if new bought of this stock Symbol, insert new row, else
+     * update the existing row, delete this row if it's close out.
+     * 
      * @param sharedStock
      * @param newOrder
      * @return
      */
-    private StockRecord UpdateStockShares(StockRecord sharedStock, Order newOrder)
-    {
+    private StockRecord UpdateStockShares(StockRecord sharedStock, Order newOrder) {
         Assert.assertNotNull(sharedStock);
         Assert.assertNotNull(newOrder);
 
         // Order type should always be set
         Assert.assertTrue(newOrder.type != OrderType.UNKNOWN);
 
-//        if(newOrder.type == OrderType.SELL)
-//            Assert.assertTrue(String.format("Existing shares $s should not less than the selling order $s for symbol: '$s'", sharedStock.getShares(), newOrder.Shares, newOrder.Symbol), sharedStock.getShares() >= newOrder.Shares);
+        // if(newOrder.type == OrderType.SELL)
+        // Assert.assertTrue(String.format("Existing shares $s should not less than the selling order $s for symbol: '$s'",
+        // sharedStock.getShares(), newOrder.Shares, newOrder.Symbol), sharedStock.getShares() >=
+        // newOrder.Shares);
 
         // Get the number of shares
         int shares = sharedStock.getShares();
@@ -261,15 +279,13 @@ public class DatabaseManager extends DataManager{
         if (newOrder.type == OrderType.BUY) {
             newSum += newOrder.Price * newOrder.Shares;
             newShares += newOrder.Shares;
-        }
-        else {
+        } else {
             newSum -= newOrder.Price * newOrder.Shares;
             newShares -= newOrder.Shares;
         }
 
         // Divisor check
-        if (newShares == 0)
-        {
+        if (newShares == 0) {
             sharedStock.setShares(0);
             return sharedStock;
         }
@@ -283,7 +299,7 @@ public class DatabaseManager extends DataManager{
     }
 
     @Override
-    public List<StockRecord> ReadSharedStocks() {
+    public List<StockRecord> ReadSharedStocks() throws java.lang.Exception {
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -292,22 +308,18 @@ public class DatabaseManager extends DataManager{
         }
         // Connection is the only JDBC resource that we need
         // PreparedStatement and ResultSet are handled by jOOQ, internally
-        try (Connection conn = DriverManager.getConnection(this.url, this.userName, this.password)) {
-            DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-            Optional<Table<?>> table = this.GetTable(create, STOCK.getName());
-            if (!table.isPresent()) {
-                create.createTable(STOCK).columns(STOCK.fields()).execute();
-            }
-            Result<Record> result = create.select().from(STOCK).fetch();
+        DSLContext global = this.getDBJooqCreate();
+        Result<Record> result = global.select().from(STOCK).fetch();
 
-            return result.stream().map(p -> (StockRecord) p).collect(Collectors.toList());
-        }catch (Exception e) {
-            Logger.getGlobal().log(Level.SEVERE, "Exception on get stock records." + '\t'  + this.url + '\t' + this.userName, e);
-            return new LinkedList<>();
-        }
+        return result.stream().map(p -> (StockRecord) p).collect(Collectors.toList());
     }
+
     public Optional<Table<?>> GetTable(DSLContext create, String tableName) {
-        return create.meta().getTables().stream().filter(p -> p.getName().equals(tableName)).findFirst();
+        return create
+                .meta()
+                .getTables()
+                .stream()
+                .filter(p -> p.getName().equals(tableName))
+                .findFirst();
     }
-
 }
