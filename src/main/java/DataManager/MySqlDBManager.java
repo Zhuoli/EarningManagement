@@ -31,8 +31,10 @@ import java.util.stream.Collectors;
 
 import static JooqORM.Tables.STOCK;
 
+
 /**
- * MYSql Connector and Executor. Created by zhuolil on 8/17/16.
+ * MYSql Connector and Executor.
+ * Created by zhuolil on 8/17/16.
  */
 public class MySqlDBManager extends DataManager {
 
@@ -94,7 +96,7 @@ public class MySqlDBManager extends DataManager {
 
     /**
      * Initialize MySqlDBManager with the given Server Address and credential.
-     * 
+     *
      * @param dbUrl
      * @param database
      * @param userName
@@ -116,7 +118,7 @@ public class MySqlDBManager extends DataManager {
 
     /**
      * Sets up and maintains SQL connection
-     * 
+     *
      * @return DSLContext instance
      * @throws Exception
      */
@@ -153,36 +155,53 @@ public class MySqlDBManager extends DataManager {
         Result<Record> result = this.getDBJooqCreate().select().from(STOCK).fetch();
 
         // Map query result to StockItems
-        HashMap<String, StockRecord> stockMap = new HashMap<>();
-        result.stream()
-                .map(r -> (StockRecord) r)
-                .forEach(stockRecord -> stockMap.put(stockRecord.getSymbol(), stockRecord));
+        HashMap<String, StockRecord> dbStockMap = new HashMap<>();
+        result.stream().map(r -> (StockRecord) r).forEach(stockRecord -> dbStockMap.put(stockRecord.getSymbol(), stockRecord));
 
         // Check each email order
         for (Order order : orders) {
+
+            StockRecord updatedStockRecord;
+
             // If in table, update row
-            if (stockMap.containsKey(order.Symbol)) {
-                StockRecord sharedStock = stockMap.get(order.Symbol);
-                sharedStock = this.UpdateStockShares(sharedStock, order);
+            if (dbStockMap.containsKey(order.Symbol)) {
+                updatedStockRecord = dbStockMap.get(order.Symbol);
+
+                // Update local stock record from database table, this unlikely happen unless db be changed in other way
+                synchronized (PriceMonitor.stockPriceMap){
+                    StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
+                    if (stockItem!=null && stockItem.getTimestamp().before(updatedStockRecord.getTimestamp()))
+                        PriceMonitor.stockPriceMap.put(order.Symbol, updatedStockRecord);
+                }
+
+                updatedStockRecord = this.UpdateStockShares(updatedStockRecord, order);
 
                 // Delete shares
-                if (sharedStock.getShares() == 0) {
-                    // Deletes this record from the database, based on the value of the primary key
-                    // or main unique key.
-                    sharedStock.delete();
-                }
+                if (updatedStockRecord.getShares() == 0)
+                {
+                    // Deletes this record from the database, based on the value of the primary key or main unique key.
+                    updatedStockRecord.delete();
+                    continue;
 
-                synchronized (PriceMonitor.stockPriceMap) {
-                    StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
-                    if (stockItem != null) {
-                        sharedStock.setReportDate(stockItem.getReportDate());
-                        // if (sharedStock.getTimestamp()>stockItem.)
+                }
+                else {
+
+                    synchronized (PriceMonitor.stockPriceMap) {
+                        StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
+                        if (stockItem != null) {
+                            // Write report date
+                            updatedStockRecord.setReportDate(stockItem.getReportDate());
+
+                        }
                     }
-                }
 
-                // Store this record back to the database using an UPDATE statement.
-                // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
-                sharedStock.update();
+                    // Update time stamp on each DB update
+                    updatedStockRecord.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
+
+                    // Store this record back to the database using an UPDATE statement.
+                    // http://www.jooq.org/javadoc/3.2.5/org/jooq/impl/UpdatableRecordImpl.html#update()
+                    updatedStockRecord.update();
+                }
 
             } else {
                 // Else, insert this row
@@ -194,6 +213,9 @@ public class MySqlDBManager extends DataManager {
                                 Timestamp.valueOf(LocalDateTime.now()))
                         .execute();
 
+                updatedStockRecord = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStockRecord);
+                dbStockMap.put(updatedStockRecord.getSymbol(), updatedStockRecord);
                 StockRecord updatedStock =
                         this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
                 Assert.assertNotNull("Failed to write stock instance back to Database table",
@@ -202,6 +224,15 @@ public class MySqlDBManager extends DataManager {
 
                 System.out.println("New row inserted " + order);
             }
+
+            // Update local stock record to the latest one
+            synchronized (PriceMonitor.stockPriceMap) {
+
+                Assert.assertNotNull("updatedStockRecord should never be null", updatedStockRecord);
+
+                PriceMonitor.stockPriceMap.put(order.Symbol, updatedStockRecord);
+            }
+
         }
     }
 
@@ -250,7 +281,7 @@ public class MySqlDBManager extends DataManager {
     /**
      * Update shared stock database row, if new bought of this stock Symbol, insert new row, else
      * update the existing row, delete this row if it's close out.
-     * 
+     *
      * @param sharedStock
      * @param newOrder
      * @return
