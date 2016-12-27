@@ -1,5 +1,6 @@
 package DataManager;
 
+import JooqORM.tables.records.HeartbeatRecord;
 import JooqORM.tables.records.StockRecord;
 import PriceMonitor.PriceMonitor;
 import org.jooq.*;
@@ -30,11 +31,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static JooqORM.Tables.STOCK;
-
+import static JooqORM.tables.Heartbeat.HEARTBEAT;
 
 /**
- * MYSql Connector and Executor.
- * Created by zhuolil on 8/17/16.
+ * MYSql Connector and Executor. Created by zhuolil on 8/17/16.
  */
 public class MySqlDBManager extends DataManager {
 
@@ -138,6 +138,35 @@ public class MySqlDBManager extends DataManager {
     }
 
     @Override
+    public void updateHeartBeat() throws Exception {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            Logger.getGlobal().log(Level.SEVERE, "", e);
+            throw e;
+        }
+        Result<HeartbeatRecord> result =
+                this.getDBJooqCreate()
+                        .selectFrom(HEARTBEAT)
+                        .where(HEARTBEAT.NAME.eq("heartbeat"))
+                        .fetch();
+
+        // Create or update heartbeat
+        if (result.size() == 0) {
+            this.getDBJooqCreate()
+                    .insertInto(HEARTBEAT, HEARTBEAT.NAME, HEARTBEAT.HEARTBEAT_)
+                    .values("HeartBeat", Timestamp.valueOf(LocalDateTime.now()))
+                    .execute();
+        }else{
+            this.getDBJooqCreate()
+                    .update(HEARTBEAT)
+                    .set(HEARTBEAT.HEARTBEAT_, Timestamp.valueOf(LocalDateTime.now()))
+                    .where(HEARTBEAT.NAME.equal("HeartBeat"))
+                    .execute();
+        }
+    }
+
+    @Override
     /**
      * Write shares back to mysql database.
      */
@@ -160,7 +189,9 @@ public class MySqlDBManager extends DataManager {
 
         // Map query result to StockItems
         HashMap<String, StockRecord> dbStockMap = new HashMap<>();
-        result.stream().map(r -> (StockRecord) r).forEach(stockRecord -> dbStockMap.put(stockRecord.getSymbol(), stockRecord));
+        result.stream()
+                .map(r -> (StockRecord) r)
+                .forEach(stockRecord -> dbStockMap.put(stockRecord.getSymbol(), stockRecord));
 
         // Check each email order
         for (Order order : orders) {
@@ -171,24 +202,25 @@ public class MySqlDBManager extends DataManager {
             if (dbStockMap.containsKey(order.Symbol)) {
                 updatedStockRecord = dbStockMap.get(order.Symbol);
 
-                // Update local stock record from database table, this unlikely happen unless db be changed in other way
-                synchronized (PriceMonitor.stockPriceMap){
+                // Update local stock record from database table, this unlikely happen unless db be
+                // changed in other way
+                synchronized (PriceMonitor.stockPriceMap) {
                     StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
-                    if (stockItem!=null && stockItem.getTimestamp().before(updatedStockRecord.getTimestamp()))
+                    if (stockItem != null
+                            && stockItem.getTimestamp().before(updatedStockRecord.getTimestamp()))
                         PriceMonitor.stockPriceMap.put(order.Symbol, updatedStockRecord);
                 }
 
                 updatedStockRecord = this.UpdateStockShares(updatedStockRecord, order);
 
                 // Delete shares
-                if (updatedStockRecord.getShares() == 0)
-                {
-                    // Deletes this record from the database, based on the value of the primary key or main unique key.
+                if (updatedStockRecord.getShares() == 0) {
+                    // Deletes this record from the database, based on the value of the primary key
+                    // or main unique key.
                     updatedStockRecord.delete();
                     continue;
 
-                }
-                else {
+                } else {
 
                     synchronized (PriceMonitor.stockPriceMap) {
                         StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.Symbol);
@@ -217,8 +249,10 @@ public class MySqlDBManager extends DataManager {
                                 Timestamp.valueOf(LocalDateTime.now()))
                         .execute();
 
-                updatedStockRecord = this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
-                Assert.assertNotNull("Failed to write stock instance back to Database table", updatedStockRecord);
+                updatedStockRecord =
+                        this.getDBJooqCreate().fetchOne(STOCK, STOCK.SYMBOL.equal(order.Symbol));
+                Assert.assertNotNull("Failed to write stock instance back to Database table",
+                        updatedStockRecord);
                 dbStockMap.put(updatedStockRecord.getSymbol(), updatedStockRecord);
                 System.out.println("New row inserted " + order);
             }
@@ -277,14 +311,15 @@ public class MySqlDBManager extends DataManager {
     }
 
     @Override
-    public void updateCurrentPrice(StockRecord[] stockRecords) throws java.lang.Exception{
-        for(StockRecord stockRecord : stockRecords){
-            if(stockRecord.getCurrentPrice()==0)
+    public void updateCurrentPrice(StockRecord[] stockRecords) throws java.lang.Exception {
+        for (StockRecord stockRecord : stockRecords) {
+            if (stockRecord.getCurrentPrice() == 0)
                 continue;
             this.getDBJooqCreate()
                     .update(STOCK)
                     .set(STOCK.CURRENT_PRICE, stockRecord.getCurrentPrice())
-                    .set(STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME, stockRecord.getCurrentPriceLatestUpdateTime())
+                    .set(STOCK.CURRENT_PRICE_LATEST_UPDATE_TIME,
+                            stockRecord.getCurrentPriceLatestUpdateTime())
                     .where(STOCK.SYMBOL.equal(stockRecord.getSymbol()))
                     .execute();
 
@@ -343,7 +378,7 @@ public class MySqlDBManager extends DataManager {
     }
 
     @Override
-    public List<StockRecord> RetriveSharedStocks() throws java.lang.Exception {
+    public List<StockRecord> retriveSharedStocks() throws java.lang.Exception {
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {

@@ -85,7 +85,7 @@ public abstract class DataManager {
 
     private void task() throws Exception {
         // Write/Override shares from Database back to memory cache
-        this.RetriveSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
+        this.retriveSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
 
         // Check email for new orders
         MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
@@ -97,14 +97,18 @@ public abstract class DataManager {
 
         this.updateCurrentPrice(this.getNewQueriedStockItemsFunc.get());
 
+        this.updateHeartBeat();
+
     }
+
+    public abstract void updateHeartBeat() throws Exception;
 
     /**
      * Get shared stocks from Database.
      *
      * @return
      */
-    public abstract List<StockRecord> RetriveSharedStocks() throws Exception;
+    public abstract List<StockRecord> retriveSharedStocks() throws Exception;
 
     /**
      * Write shares back to memory cache and database.

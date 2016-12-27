@@ -4,6 +4,7 @@
 package JooqORM;
 
 
+import JooqORM.tables.Heartbeat;
 import JooqORM.tables.Stock;
 
 import java.util.ArrayList;
@@ -30,12 +31,17 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Earningmanagerdb extends SchemaImpl {
 
-    private static final long serialVersionUID = -844104310;
+    private static final long serialVersionUID = -1662548018;
 
     /**
      * The reference instance of <code>EarningManagerDB</code>
      */
     public static final Earningmanagerdb EARNINGMANAGERDB = new Earningmanagerdb();
+
+    /**
+     * The table <code>EarningManagerDB.heartbeat</code>.
+     */
+    public final Heartbeat HEARTBEAT = JooqORM.tables.Heartbeat.HEARTBEAT;
 
     /**
      * The table <code>EarningManagerDB.stock</code>.
@@ -67,6 +73,7 @@ public class Earningmanagerdb extends SchemaImpl {
 
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
+            Heartbeat.HEARTBEAT,
             Stock.STOCK);
     }
 }
