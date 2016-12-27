@@ -72,7 +72,7 @@ public abstract class DataManager {
                     if (++errorCount == 3)
                         throw e;
                 }
-                Thread.sleep(5 * 1000);
+                Thread.sleep(20 * 1000);
             }
         } catch (SQLException sqlexc) {
             Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlexc);
@@ -86,6 +86,8 @@ public abstract class DataManager {
     private void task() throws Exception {
         // Write/Override shares from Database back to memory cache
         this.RetriveSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
+
+        // Check email for new orders
         MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
         Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
 

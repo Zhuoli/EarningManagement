@@ -105,15 +105,8 @@ public class ResultPublisher {
 
         System.out.println(reportBuilder.toString());
 
-        MonitorEmail[] emails = this.emailUser.ReceiveEmailsFrom(EmailManager.getEmailRecipient(), false);
-
-        if (emails != null && emails.length > 0) {
-            this.emailUser.Send(EmailManager.getEmailRecipient(), "Stock Report", reportBuilder.toString());
-            System.out.println("Report sent to: " + EmailManager.getEmailRecipient());
-        }
-
         // Buying value
-        Thread.sleep(5 * 1000);
+        Thread.sleep(10 * 1000);
     }
 
     private String GenerateQuartelyReportDate(StockRecord[] stockItems) {
