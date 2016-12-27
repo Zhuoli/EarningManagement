@@ -4,6 +4,7 @@
 package JooqORM;
 
 
+import JooqORM.tables.Heartbeat;
 import JooqORM.tables.Stock;
 
 import javax.annotation.Generated;
@@ -21,6 +22,11 @@ import javax.annotation.Generated;
 )
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Tables {
+
+    /**
+     * The table <code>EarningManagerDB.heartbeat</code>.
+     */
+    public static final Heartbeat HEARTBEAT = JooqORM.tables.Heartbeat.HEARTBEAT;
 
     /**
      * The table <code>EarningManagerDB.stock</code>.

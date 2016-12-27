@@ -4,7 +4,9 @@
 package JooqORM;
 
 
+import JooqORM.tables.Heartbeat;
 import JooqORM.tables.Stock;
+import JooqORM.tables.records.HeartbeatRecord;
 import JooqORM.tables.records.StockRecord;
 
 import javax.annotation.Generated;
@@ -36,6 +38,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final UniqueKey<HeartbeatRecord> KEY_HEARTBEAT_PRIMARY = UniqueKeys0.KEY_HEARTBEAT_PRIMARY;
     public static final UniqueKey<StockRecord> KEY_STOCK_PRIMARY = UniqueKeys0.KEY_STOCK_PRIMARY;
 
     // -------------------------------------------------------------------------
@@ -48,6 +51,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     private static class UniqueKeys0 extends AbstractKeys {
+        public static final UniqueKey<HeartbeatRecord> KEY_HEARTBEAT_PRIMARY = createUniqueKey(Heartbeat.HEARTBEAT, "KEY_heartbeat_PRIMARY", Heartbeat.HEARTBEAT.NAME);
         public static final UniqueKey<StockRecord> KEY_STOCK_PRIMARY = createUniqueKey(Stock.STOCK, "KEY_stock_PRIMARY", Stock.STOCK.SYMBOL);
     }
 }
