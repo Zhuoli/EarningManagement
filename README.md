@@ -12,6 +12,6 @@ https://zhuoli.github.io/EarningManagement/
  1. screen
  2. launch java application
  3. Ctrl+A, Ctrl+D
- 4: log out
+ 4. log out
  ...
  To resume: screen -r
