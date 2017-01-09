@@ -9,6 +9,7 @@ The backend of Stock-shares assistant running at : http://zhuoliliang.com/em/, i
  4. Use JOOQ as Object-relational mapping(ORP)
 
 
+# Tips
 ###https://www.google.com/finance
 
 ### How to get jar: mvn clean compile assembly:single
