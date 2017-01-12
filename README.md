@@ -1,6 +1,6 @@
 # Earning manager
 
-The backend of Stock-shares assistant running at : http://zhuoliliang.com/em/, it performs the realtime data updating and Sync so that the front end could always read the latest data from AWS Relational Database
+The backend of Stock-shares assistant running at : http://zhuoliliang.com/em/helloWorld/current, it performs the realtime data updating and Sync so that the front end could always read the latest data from AWS Relational Database
 
 ### Functions
  1. Parse HTML content of Nasdaq website to get the realtime Stock price from : http://www.nasdaq.com/symbol/
