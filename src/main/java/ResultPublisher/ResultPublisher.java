@@ -8,6 +8,7 @@ import com.joanzapata.utils.Strings;
 import javax.mail.NoSuchProviderException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,12 +43,16 @@ public class ResultPublisher {
      * @return
      * @throws NoSuchProviderException
      */
-    public ResultPublisher CollectInformationAndAuthenticate() throws NoSuchProviderException {
+    public Optional<ResultPublisher> CollectInformationAndAuthenticate(){
         if (this.emailUser == null) {
             this.emailUser = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
         }
-        this.emailUser.Authenticate();
-        return this;
+        try {
+            this.emailUser.Authenticate();
+        }catch (NoSuchProviderException exc){
+            return Optional.empty();
+        }
+        return Optional.of(this);
     }
 
     /**

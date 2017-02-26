@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -41,17 +42,17 @@ public abstract class DataManager {
     /**
      * Constructor, create DATA_ROOT directory
      */
-    public static DataManager GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc) throws IOException {
+    public static Optional<DataManager> GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc){
         try {
             DataManager manager = MySqlDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
-            return manager;
+            return Optional.of(manager);
         } catch (SQLException e) {
             Logger.getGlobal().log(Level.SEVERE, "Failed on initialization database manager", e);
             e.printStackTrace();
         }
-        return null;
+        return Optional.empty();
     }
 
 

@@ -17,7 +17,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>StockMaster</mainClass>
+                            <mainClass>RunMe</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -46,7 +46,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>StockMaster</mainClass>
+                            <mainClass>RunMe</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

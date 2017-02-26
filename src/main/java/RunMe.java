@@ -4,6 +4,7 @@ import ResultPublisher.ResultPublisher;
 import com.joanzapata.utils.Strings;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -14,20 +15,12 @@ import java.util.logging.*;
  * Stock master.
  * Created by zhuoli on 6/23/16.
  */
-public class StockMaster {
+public class RunMe {
 
     public static void main(String[] args) {
-        if (!StockMaster.SetUp())
+        if (!RunMe.SetUp())
             return;
-        try {
-            new StockMaster().start(args);
-            return;
-        } catch (Exception exc) {
-            Logger.getGlobal().log(Level.SEVERE, "Unexpected exception", exc);
-            exc.printStackTrace();
-        }
-        // TODO : Exit with 1 once code deploy set up
-        // System.exit(1);
+        new RunMe().start(args);
     }
 
     /**
@@ -37,7 +30,7 @@ public class StockMaster {
         try {
 
             // Log absolute path
-            String filePath = Paths.get("").toAbsolutePath() + Strings.format("/{classname}.log").with("classname", StockMaster.class.getName()).build();
+            String filePath = Paths.get("").toAbsolutePath() + Strings.format("/{classname}.log").with("classname", RunMe.class.getName()).build();
 
             // Log format
             SimpleFormatter simpleFormatter = new SimpleFormatter();
@@ -56,12 +49,11 @@ public class StockMaster {
     }
 
     /**
-     * Entry of the StockMaster.
+     * Entry of the RunMe.
      *
      * @param args
-     * @throws Exception
      */
-    public void start(String[] args) throws Exception {
+    public boolean start(String[] args){
 
         // Log start time
         Logger.getGlobal().info("CurrencyProphet been launched. all rights reserved");
@@ -70,7 +62,12 @@ public class StockMaster {
         ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
 
         // Initialize result publisher and authenticate user information
-        ResultPublisher publisher = ResultPublisher.GetInstance(PriceMonitor::GetStocks).CollectInformationAndAuthenticate();
+        Optional<ResultPublisher> publisher = ResultPublisher.GetInstance(PriceMonitor::GetStocks).CollectInformationAndAuthenticate();
+
+        if (!publisher.isPresent()){
+            System.err.println("Authentication failed, system going exit...");
+            return false;
+        }
 
         System.out.println("Email authenticate succeed");
         System.out.println("Monitor started...");
@@ -79,16 +76,21 @@ public class StockMaster {
         PriceMonitor priceMonitor = new PriceMonitor();
 
         // Initialize data manager and StockRegister method
-        DataManager dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles, PriceMonitor::GetStocks);
+        Optional<DataManager> dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles, PriceMonitor::GetStocks);
+
+        if (!dataManager.isPresent()){
+            System.err.println("DataManager is null, application exit.");
+            return false;
+        }
 
         // Submit result publisher thread
         Future publisherTask = taskExecutor.submit(() -> {
-            publisher.Start();
+            publisher.get().Start();
         });
 
         // Submit data manager thread
         Future dataManagerTask = taskExecutor.submit(() -> {
-            dataManager.Start();
+            dataManager.get().Start();
         });
 
         // Submit Price monitor thread
@@ -102,28 +104,33 @@ public class StockMaster {
 
         // Initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks will be accepted. Invocation has no additional effect if already shut down.
         taskExecutor.shutdown();
-        // Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs, or the current thread is interrupted, whichever happens first.
-        while (!taskExecutor.awaitTermination(30, TimeUnit.SECONDS))
-        {
-            if (publisherTask.isCancelled() || publisherTask.isDone()){
 
-                Logger.getGlobal().log(Level.SEVERE, "Publisher task exit abnormally.");
-                System.exit(1);
+        try {
+            // Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs, or the current thread is interrupted, whichever happens first.
+            while (!taskExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                if (publisherTask.isCancelled() || publisherTask.isDone()) {
+
+                    Logger.getGlobal().log(Level.SEVERE, "Publisher task exit abnormally.");
+                    System.exit(1);
+                }
+
+                if (dataManagerTask.isCancelled() || dataManagerTask.isDone()) {
+
+                    Logger.getGlobal().log(Level.SEVERE, "dataManagerTask task exit abnormally.");
+                    System.exit(1);
+                }
+                if (priceMonitorTask.isCancelled() || priceMonitorTask.isDone()) {
+
+                    Logger.getGlobal().log(Level.SEVERE, "priceMonitorTask task exit abnormally.");
+                    System.exit(1);
+                }
             }
-
-            if( dataManagerTask.isCancelled() || dataManagerTask.isDone()){
-
-                Logger.getGlobal().log(Level.SEVERE, "dataManagerTask task exit abnormally.");
-                System.exit(1);
-            }
-            if(priceMonitorTask.isCancelled() || priceMonitorTask.isDone()){
-
-                Logger.getGlobal().log(Level.SEVERE, "priceMonitorTask task exit abnormally.");
-                System.exit(1);
-            }
+        } catch (InterruptedException exc){
+            exc.printStackTrace();
         }
 
         // Log for Abnormal state
         Logger.getGlobal().severe("System shutdown");
+        return true;
     }
 }
