@@ -3,9 +3,9 @@
     <!-- Configure the database connection here -->
     <jdbc>
         <driver>com.mysql.jdbc.Driver</driver>
-        <url>jdbc:mysql://earningmanagement.cqxahokpf4dx.us-west-2.rds.amazonaws.com:3306/EarningManagerDB</url>
-        <user>zhuoli</user>
-        <password>cp8482617</password>
+        <url>jdbc:mysql://[your database url]</url>
+        <user></user>
+        <password></password>
     </jdbc>
 
     <generator>
