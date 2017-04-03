@@ -2,13 +2,13 @@
 <EarningManagerConfigure>
     <Emails id="Emails" type="xs:ID">
         <User>earningmanagerseattle@yahoo.com</User>
-        <Password>s3NUPm8U</Password>
+        <Password></Password>
         <Recipient>robotonyszu@gmail.com</Recipient>
     </Emails>
     <Databases id="Databases" type="xs:ID">
-        <Url>earningmanagement.cqxahokpf4dx.us-west-2.rds.amazonaws.com:3306</Url>
+        <Url></Url>
         <Database>EarningManagerDB</Database>
-        <User>zhuoli</User>
-        <Password>cp8482617</Password>
+        <User></User>
+        <Password></Password>
     </Databases>
 </EarningManagerConfigure>
