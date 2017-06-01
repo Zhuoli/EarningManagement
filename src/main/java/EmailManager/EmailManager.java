@@ -163,14 +163,17 @@ public class EmailManager {
      * @return
      */
     public boolean EmailAuthenticate(String username, String password) {
-        if (username.contains("@")){
-            username = username.split("@")[0];
-        }
-        Session session = Session.getInstance(new Properties());
+
+        Properties prop = new Properties();
+
+        // Fix RC4 disabled problem in Java 8: http://www.xiaotanzhu.com/2016/07/30/use-rc4-in-tencent-mail.html
+        prop.setProperty("mail.imaps.ssl.ciphersuites", "SSL_RSA_WITH_RC4_128_SHA");
+        prop.setProperty("mail.imaps.ssl.protocols", "TLSv1 TLSv1.1 TLSv1.2");
+        Session session = Session.getInstance(prop);
         try {
 
             this.receiveStore = session.getStore("imaps");
-            this.receiveStore.connect("imap.mail.yahoo.com", 993, username, password);
+            this.receiveStore.connect("imap.exmail.qq.com", 993, username, password);
             return true;
         } catch (MessagingException e) {
             System.err.println("Password incorrect, please try again. inner message '" + e.getMessage()+"'");
@@ -230,7 +233,7 @@ public class EmailManager {
             this.Authenticate();
 
         if (!this.receiveStore.isConnected())
-            this.receiveStore.connect("imap.mail.yahoo.com", 993, this.username, this.password);
+            this.receiveStore.connect("imap.exmail.qq.com", 993, this.username, this.password);
 
         Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
 
