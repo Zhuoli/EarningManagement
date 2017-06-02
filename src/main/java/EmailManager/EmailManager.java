@@ -17,19 +17,18 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Scanner;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Created by zhuoli on 7/9/16.
  */
 public class EmailManager {
 
-    private final static String FOLDER = "Inbox";
+    public static final Pattern INBOX_FOLDER_REGX_PATTERN = Pattern.compile("inbox", Pattern.CASE_INSENSITIVE);
+
     private static EmailManager instance;
     private static String EmailRecipient;
     private String username;
@@ -235,7 +234,16 @@ public class EmailManager {
         if (!this.receiveStore.isConnected())
             this.receiveStore.connect("imap.exmail.qq.com", 993, this.username, this.password);
 
-        Folder infolder = this.receiveStore.getFolder(EmailManager.FOLDER);
+        Folder[] allFolders = this.receiveStore.getDefaultFolder().list("*");
+        Optional<Folder> optionalInboxFolder =
+                Arrays.stream(allFolders)
+                        .filter(folder -> EmailManager.INBOX_FOLDER_REGX_PATTERN.matcher(folder.getFullName()).matches())
+                        .findAny();
+
+        String[] names = Arrays.stream(allFolders).map(folder -> folder.getFullName()).toArray(String[]::new);
+        Assert.assertTrue("Inbox doesn't exit in target mailbox: " + Arrays.toString(names), optionalInboxFolder.isPresent());
+
+        Folder infolder = optionalInboxFolder.get();
 
         try {
 
@@ -271,7 +279,7 @@ public class EmailManager {
                     // Instead, the JavaMail API Design Specification, Chapter 4, section "The Flags Class" states that the SEEN flag is implicitly set when the contents of a message are retrieved.
                     // http://stackoverflow.com/questions/7678919/javamail-mark-gmail-message-as-read
                     msg.getContent();
-                    MonitorEmail email = new MonitorEmail(EmailManager.FOLDER, msg.getSubject(), this.username, addresses[0].toString(), content);
+                    MonitorEmail email = new MonitorEmail("INBOX", msg.getSubject(), this.username, addresses[0].toString(), content);
                     emailList.add(email);
                 } catch (Exception exc) {
                     Logger.getGlobal().log(Level.WARNING, "Failed to receive email from: " + emailRecipient, exc);
