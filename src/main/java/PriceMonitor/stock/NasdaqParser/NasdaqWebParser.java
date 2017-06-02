@@ -58,7 +58,7 @@ public class NasdaqWebParser {
             dateText = strs[1].trim();
 
             // Parse date time string
-            return Optional.of(this.ParseEaringReportDate(dateText));
+            return this.ParseEaringReportDate(dateText);
         } catch (java.net.SocketTimeoutException socketException) {
             Logger.getGlobal().log(Level.SEVERE, String.format("Timeout on accessing url: \"%s\"", reportUrl), socketException);
         } catch (Exception exc) {
@@ -88,10 +88,12 @@ public class NasdaqWebParser {
         }
     }
 
-    public LocalDate ParseEaringReportDate(String text) {
+    public Optional<LocalDate> ParseEaringReportDate(String text) {
+        if (text.isEmpty() || text.trim().equals("TBA"))
+            return Optional.empty();
         DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern("MMM dd, yyyy").toFormatter();
         TemporalAccessor ta = formatter.parse(text);
         Instant instant = LocalDate.from(ta).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-        return instant.atZone(ZoneId.of("US/Eastern")).toLocalDate();
+        return Optional.of(instant.atZone(ZoneId.of("US/Eastern")).toLocalDate());
     }
 }
