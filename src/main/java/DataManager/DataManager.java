@@ -2,11 +2,9 @@ package DataManager;
 
 import EmailManager.EmailManager;
 import EmailManager.MonitorEmail;
-import JooqORM.tables.records.StockRecord;
 import PriceMonitor.PriceMonitor;
 import Utility.RetryManager;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -44,7 +42,7 @@ public abstract class DataManager {
      */
     public static Optional<DataManager> GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc){
         try {
-            DataManager manager = MySqlDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
+            DataManager manager = MongoDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
             return Optional.of(manager);

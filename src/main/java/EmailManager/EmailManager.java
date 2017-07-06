@@ -161,6 +161,27 @@ public class EmailManager {
      * @param password
      * @return
      */
+    private static final String SSL_EMAIL_SOLUTION =
+            "QQ email using RC4 for SSL connection, but RC4 algorithm is disabled …" +
+            "\n" +
+            "解决方法: http://www.xiaotanzhu.com/2016/07/30/use-rc4-in-tencent-mail.html\n" +
+            "启用Java的RC4算法\n" +
+            "没有去深研究为什么JDK会默认禁止这个算法，也不知道腾讯为什么会重新选择了一个JDK默认禁用的算法（7月29日之前是没有问题的）。但由于需要用到QQ邮箱，所以必须得开启这个算法。开启步骤如下：\n" +
+            "Go to the Java JRE installation folder: {JRE_HOME}\\lib\\security\\\n" +
+            "Locate java.security file.\n" +
+            "Make a backup copy of the file.\n" +
+            "Edit the java.security file with a text editor software (for example Notepad) according to the example further below.\n" +
+            "534c534\n" +
+            "- jdk.tls.disabledAlgorithms=SSLv3, RC4, MD5withRSA, DH keySize < 768\n" +
+            "+ jdk.tls.disabledAlgorithms=SSLv3, MD5withRSA, DH keySize < 768\n" +
+            "591c591\n" +
+            "-         RC4_128, RC4_40, DES_CBC, DES40_CBC\n" +
+            "+         DES_CBC, DES40_CBC\n" +
+            "启用协议\n" +
+            "在POP/SMTP的协议中增加最新的TLSv1.2协议：\n" +
+            "prop.setProperties(\"mail.pop3s.ssl.protocols\", \"TSLv1 TSLv1.1 TLSv1.2\");\n" +
+            "或\n" +
+            "prop.setProperties(\"mail.smtps.ssl.protocols\", \"TSLv1 TSLv1.1 TLSv1.2\");";
     public boolean EmailAuthenticate(String username, String password) {
 
         Properties prop = new Properties();
@@ -175,7 +196,17 @@ public class EmailManager {
             this.receiveStore.connect("imap.exmail.qq.com", 993, username, password);
             return true;
         } catch (MessagingException e) {
-            System.err.println("Password incorrect, please try again. inner message '" + e.getMessage()+"'");
+            if (e.getMessage().contains("protocol is disabled or cipher suites are inappropriate")){
+                System.err.println(SSL_EMAIL_SOLUTION);
+                System.out.println("Press any key to exit.");
+                try {
+                    System.in.read();
+                    System.exit(1);
+                }catch (Exception exc){
+                    // does nothing
+                }
+            }
+            System.err.println("Password or user name incorrect, please try again.\nUsername: " + username + "\n" + "inner message '" + e.getMessage()+"'");
         } finally {
             if (this.receiveStore != null)
                 try {

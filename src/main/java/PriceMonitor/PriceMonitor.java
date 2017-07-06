@@ -1,7 +1,6 @@
 package PriceMonitor;
 
-import JooqORM.tables.Stock;
-import JooqORM.tables.records.StockRecord;
+import DataManager.StockRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 
 import java.sql.Timestamp;
@@ -59,21 +58,13 @@ public class PriceMonitor {
 
                 // Update stock mapper
                 if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
-                    StockRecord item = PriceMonitor.stockPriceMap.get(boughtStockItem.get(Stock.STOCK.SYMBOL));
+                    StockRecord item = PriceMonitor.stockPriceMap.get(symbol);
                     item.setSharedAverageCost(averageCost);
                     item.setShares(number);
                 } else {
                     PriceMonitor.stockPriceMap.put(
                             symbol,
-                            new StockRecord(
-                                    symbol,
-                                    Double.valueOf(0),
-                                    Timestamp.valueOf(LocalDateTime.of(1900, 1, 1, 0, 0, 0)),
-                                    null,
-                                    averageCost,
-                                    number,
-                                    targetPriceNasdaq,
-                                    Timestamp.valueOf(LocalDateTime.now())));
+                            StockRecord.builder().symbol(symbol).timestamp(new Date()).sharedAverageCost(averageCost).shares(number).targetPrice(targetPriceNasdaq).build());
                 }
             }
 
@@ -123,7 +114,7 @@ public class PriceMonitor {
             try {
                 stockItem.setCurrentPrice(nasdaqWebParser.QuoteSymbolePrice(stockItem.getSymbol()));
 
-                stockItem.setCurrentPriceLatestUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
+                stockItem.setCurrentPriceLatestUpdateTime(new Date());
 
                 // Sleep a while to avoid access limit
                 Thread.sleep(500);

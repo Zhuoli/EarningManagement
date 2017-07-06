@@ -1,17 +1,17 @@
 package ResultPublisher;
 
 import EmailManager.EmailManager;
-import EmailManager.MonitorEmail;
-import JooqORM.tables.records.StockRecord;
 import com.joanzapata.utils.Strings;
 
 import javax.mail.NoSuchProviderException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import DataManager.StockRecord;
 
 /**
  * User interactive via Email
@@ -118,7 +118,7 @@ public class ResultPublisher {
         StringBuilder sb = new StringBuilder();
         for (StockRecord item : stockItems) {
             if (item.getReportDate() != null) {
-                LocalDateTime earningReportdate = item.getReportDate().toLocalDateTime();
+                Date earningReportdate = item.getReportDate();
                 sb.append(String.format("%1$-8s quarterly earning report date: %2$s ", item.getSymbol(), earningReportdate));
                 sb.append(System.lineSeparator());
             }
@@ -129,10 +129,6 @@ public class ResultPublisher {
     private String GenerateLatestPriceReport(StockRecord[] stockItems) {
         StringBuilder sb = new StringBuilder();
         for (StockRecord item : stockItems) {
-
-            if (item.getCurrentPrice() == null || item.getShares() == null || item.getSharedAverageCost() == null)
-                continue;
-
             // String Format: https://sharkysoft.com/archive/printf/docs/javadocs/lava/clib/stdio/doc-files/specification.htm
             String line = String.format("Symbol: %1$-8s Price: %2$6.2f Shares: %3$4d Earning: %4$8.2f %5$s",
                     item.getSymbol(), item.getCurrentPrice(), item.getShares(), (item.getCurrentPrice() - item.getSharedAverageCost()) * item.getShares(), System.lineSeparator());
@@ -142,8 +138,8 @@ public class ResultPublisher {
     }
 
     private String GenerateEarningReport(StockRecord[] stockItems) {
-        double baseValue = Arrays.stream(stockItems).filter(item -> item.getSharedAverageCost() != null && item.getShares() != null).map(item -> item.getSharedAverageCost() * item.getShares()).reduce((a, b) -> a + b).get();
-        double currentValue = Arrays.stream(stockItems).filter(item -> item.getCurrentPrice() != null && item.getShares() != null).map(item -> item.getCurrentPrice() * item.getShares()).reduce((a, b) -> a + b).get();
+        double baseValue = Arrays.stream(stockItems).map(item -> item.getSharedAverageCost() * item.getShares()).reduce((a, b) -> a + b).get();
+        double currentValue = Arrays.stream(stockItems).map(item -> item.getCurrentPrice() * item.getShares()).reduce((a, b) -> a + b).get();
         StringBuilder earningStringBuilder = new StringBuilder();
         earningStringBuilder.append(String.format("Buying price: %.2f" + System.lineSeparator(), baseValue));
         earningStringBuilder.append(String.format("Current value: %.2f" + System.lineSeparator(), currentValue));
