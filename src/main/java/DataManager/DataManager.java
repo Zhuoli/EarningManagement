@@ -5,7 +5,6 @@ import EmailManager.MonitorEmail;
 import PriceMonitor.PriceMonitor;
 import Utility.RetryManager;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,16 +40,10 @@ public abstract class DataManager {
      * Constructor, create DATA_ROOT directory
      */
     public static Optional<DataManager> GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc){
-        try {
             DataManager manager = MongoDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
             manager.stockItemRegister = stockItemRegister;
             manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
             return Optional.of(manager);
-        } catch (SQLException e) {
-            Logger.getGlobal().log(Level.SEVERE, "Failed on initialization database manager", e);
-            e.printStackTrace();
-        }
-        return Optional.empty();
     }
 
 
@@ -73,10 +66,7 @@ public abstract class DataManager {
                 }
                 Thread.sleep(20 * 1000);
             }
-        } catch (SQLException sqlexc) {
-            Logger.getGlobal().log(Level.SEVERE, "SQL Exception", sqlexc);
-            System.exit(1);
-        } catch (Exception exc) {
+        }catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "Price Prophet thread Interrupted", exc);
             System.exit(1);
         }

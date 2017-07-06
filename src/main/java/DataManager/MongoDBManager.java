@@ -22,16 +22,13 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static com.mongodb.client.model.Filters.eq;
 
 /**
- * MYSql Connector and Executor. Created by zhuolil on 8/17/16.
+ * MongoDB Connector and Executor. Created by zhuolil on 8/17/16.
  */
 public class MongoDBManager extends DataManager {
     private static String CONNECTION_STRING = "mongodb://stockdbzhuoli:QrLUUzcspLOK2pjdEvVlevms5zCfvhQlChWOtrLVRI1r5HF1mKwAKwwFm296SBSWLoOPnAQ8apN8zaPPYA3inQ==@stockdbzhuoli.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
@@ -83,7 +80,7 @@ public class MongoDBManager extends DataManager {
         }
     }
 
-    public MongoDBManager Authenticate() throws SQLException {
+    public MongoDBManager Authenticate(){
         return this;
     }
 
@@ -182,7 +179,7 @@ public class MongoDBManager extends DataManager {
                     }
 
                     // Update time stamp on each DB update
-                    updatedStockRecord.setTimestamp(Timestamp.valueOf(LocalDateTime.now()));
+                    updatedStockRecord.setTimestamp(new Date());
 
                     // Store this record back to the database using an UPDATE statement.
                     this.updateDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, updatedStockRecord);

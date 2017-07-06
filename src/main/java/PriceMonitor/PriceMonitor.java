@@ -3,7 +3,6 @@ package PriceMonitor;
 import DataManager.StockRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -128,7 +127,7 @@ public class PriceMonitor {
 
             // Update earning report date
             if (localDate.isPresent()) {
-                stockItem.setReportDate(Timestamp.valueOf(localDate.get().atStartOfDay()));
+                stockItem.setReportDate(new Date());
             }
         }
 
