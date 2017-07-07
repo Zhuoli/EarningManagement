@@ -1,6 +1,5 @@
 package com.zhuoli.earning.DataManager;
 
-import com.zhuoli.earning.PriceMonitor.PriceMonitor;
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
@@ -10,6 +9,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
+import com.zhuoli.earning.PriceMonitor.PriceMonitor;
 import org.junit.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,19 +22,49 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import static com.mongodb.client.model.Filters.eq;
 
 /**
  * MongoDB Connector and Executor. Created by zhuolil on 8/17/16.
  */
 public class MongoDBManager extends DataManager {
+    public static final String DB_NAME = "stockdb";
     private static String CONNECTION_STRING = "mongodb://stockdbzhuoli:QrLUUzcspLOK2pjdEvVlevms5zCfvhQlChWOtrLVRI1r5HF1mKwAKwwFm296SBSWLoOPnAQ8apN8zaPPYA3inQ==@stockdbzhuoli.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
-    private static String EARN_SHARE_TABLE_NAME = "earning_share";
+    private static String EARN_SHARE_TABLE_NAME = "earningmanagement";
     MongoClient mongoClient = null;
     private MongoDatabase mongoDatabase;
+
+    public MongoDBManager() {
+
+        this.mongoClient = new MongoClient(new MongoClientURI(MongoDBManager.CONNECTION_STRING));
+        this.mongoDatabase = this.mongoClient.getDatabase(MongoDBManager.DB_NAME);
+    }
+
+    /**
+     * Initialize MongoDBManager with the given Server Address and credential.
+     *
+     * @param dbUrl
+     * @param database
+     * @param userName
+     * @param password
+     */
+    private MongoDBManager(String dbUrl, String database, String userName, String password) {
+        Assert.assertNotNull(dbUrl);
+        Assert.assertNotNull(database);
+        Assert.assertNotNull(userName);
+        Assert.assertNotNull(password);
+
+
+        this.mongoClient = new MongoClient(new MongoClientURI(MongoDBManager.CONNECTION_STRING));
+        this.mongoDatabase = this.mongoClient.getDatabase(MongoDBManager.DB_NAME);
+    }
 
     /**
      * Initialize EmailMananger from XML configuration file.
@@ -82,31 +112,6 @@ public class MongoDBManager extends DataManager {
 
     public MongoDBManager Authenticate(){
         return this;
-    }
-
-    public MongoDBManager() {
-
-        this.mongoClient = new MongoClient(new MongoClientURI(MongoDBManager.CONNECTION_STRING));
-        this.mongoDatabase = this.mongoClient.getDatabase(MongoDBManager.EARN_SHARE_TABLE_NAME);
-    }
-
-    /**
-     * Initialize MongoDBManager with the given Server Address and credential.
-     *
-     * @param dbUrl
-     * @param database
-     * @param userName
-     * @param password
-     */
-    private MongoDBManager(String dbUrl, String database, String userName, String password) {
-        Assert.assertNotNull(dbUrl);
-        Assert.assertNotNull(database);
-        Assert.assertNotNull(userName);
-        Assert.assertNotNull(password);
-
-
-        this.mongoClient = new MongoClient(new MongoClientURI(MongoDBManager.CONNECTION_STRING));
-        this.mongoDatabase = this.mongoClient.getDatabase(MongoDBManager.EARN_SHARE_TABLE_NAME);
     }
 
     @Override
