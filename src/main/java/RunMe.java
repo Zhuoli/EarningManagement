@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.*;
+import DataManager.*;
 
 /**
  * Stock master.
@@ -62,7 +63,7 @@ public class RunMe {
         ExecutorService taskExecutor = Executors.newFixedThreadPool(3);
 
         // Initialize result publisher and authenticate user information
-        Optional<ResultPublisher> publisher = ResultPublisher.GetInstance(PriceMonitor::GetStocks).CollectInformationAndAuthenticate();
+        Optional<ResultPublisher> publisher = ResultPublisher.GetInstance().CollectInformationAndAuthenticate();
 
         if (!publisher.isPresent()){
             System.err.println("Authentication failed, system going exit...");
@@ -76,12 +77,7 @@ public class RunMe {
         PriceMonitor priceMonitor = new PriceMonitor();
 
         // Initialize data manager and StockRegister method
-        Optional<DataManager> dataManager = DataManager.GetDataManager(PriceMonitor::RegisterStockSymboles, PriceMonitor::GetStocks);
-
-        if (!dataManager.isPresent()){
-            System.err.println("DataManager is null, application exit.");
-            return false;
-        }
+        MongoDBManager dataManager = new MongoDBManager();
 
         // Submit result publisher thread
         Future publisherTask = taskExecutor.submit(() -> {
@@ -90,7 +86,7 @@ public class RunMe {
 
         // Submit data manager thread
         Future dataManagerTask = taskExecutor.submit(() -> {
-            dataManager.get().Start();
+            dataManager.Start();
         });
 
         // Submit Price monitor thread

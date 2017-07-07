@@ -1,6 +1,7 @@
 package ResultPublisher;
 
 import EmailManager.EmailManager;
+import PriceMonitor.PriceMonitor;
 import com.joanzapata.utils.Strings;
 
 import javax.mail.NoSuchProviderException;
@@ -8,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import DataManager.StockRecord;
@@ -21,10 +21,8 @@ public class ResultPublisher {
 
     EmailManager emailUser = null;
 
-    Supplier<StockRecord[]> getStocksFuc;
 
-    private ResultPublisher(Supplier<StockRecord[]> getStocksFuc) {
-        this.getStocksFuc = getStocksFuc;
+    private ResultPublisher() {
     }
 
     /**
@@ -32,9 +30,9 @@ public class ResultPublisher {
      *
      * @return
      */
-    public static ResultPublisher GetInstance(Supplier<StockRecord[]> getStocksFuc) {
+    public static ResultPublisher GetInstance() {
 
-        return new ResultPublisher(getStocksFuc);
+        return new ResultPublisher();
     }
 
     /**
@@ -80,7 +78,7 @@ public class ResultPublisher {
     private void threadTask() throws Exception {
 
         // Get stock prices for each data item
-        StockRecord[] stockItems = this.getStocksFuc.get();
+        StockRecord[] stockItems = PriceMonitor.GetStocks();
 
         // Skip if items are null or empty
         if (stockItems == null || stockItems.length == 0) {

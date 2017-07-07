@@ -5,12 +5,8 @@ import EmailManager.MonitorEmail;
 import PriceMonitor.PriceMonitor;
 import Utility.RetryManager;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,46 +15,38 @@ import java.util.logging.Logger;
  */
 public abstract class DataManager {
 
-
-    /**
-     * Stock Item Register method
-     */
-    protected Consumer<StockRecord> stockItemRegister;
-
     /**
      * Get ne queried stock items function
      */
-    protected Supplier<StockRecord[]> getNewQueriedStockItemsFunc;
-
     protected EmailManager emailManager = EmailManager.GetAndInitializeEmailmanager("resourceConfig.xml");
 
     protected DataManager() {
 
     }
 
-    /**
-     * Constructor, create DATA_ROOT directory
-     */
-    public static Optional<DataManager> GetDataManager(Consumer<StockRecord> stockItemRegister, Supplier<StockRecord[]> getNewQueriedStockItemsFunc){
-            DataManager manager = MongoDBManager.GetDatabaseManagerInstance("resourceConfig.xml").Authenticate();
-            manager.stockItemRegister = stockItemRegister;
-            manager.getNewQueriedStockItemsFunc = getNewQueriedStockItemsFunc;
-            return Optional.of(manager);
-    }
-
-
     // Start thread
     public void Start() {
         try {
 
+            // Retrieve Robinhood emails which has been read.
             MonitorEmail[] seenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", true);
             Order[] seenOrders = this.CheckForNewOrdersPlaced(seenRobinHoodEmails);
-            this.recordSharedStocks(seenOrders);
+            this.writeNewOrders2DB(seenOrders);
 
             int errorCount = 0;
             while (true) {
                 try {
-                    this.task();
+                    // Write/Override shares from Database back to memory cache
+                    this.retriveSharedStocksFromDB().stream().forEach(stockItem -> PriceMonitor.RegisterStockSymboles(stockItem));
+
+                    // Check email for new orders
+                    MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
+                    Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
+
+                    this.writeNewOrders2DB(newOrders);
+
+                    this.updateHeartBeat();
+
                     errorCount = 0;
                 } catch (Exception e) {
                     if (++errorCount == 3)
@@ -72,24 +60,6 @@ public abstract class DataManager {
         }
     }
 
-    private void task() throws Exception {
-        // Write/Override shares from Database back to memory cache
-        this.retriveSharedStocks().stream().forEach(stockItem -> this.stockItemRegister.accept(stockItem));
-
-        // Check email for new orders
-        MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
-        Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
-
-        this.recordSharedStocks(newOrders);
-
-        this.updateReportDateToDatabase();
-
-        this.updateCurrentPrice(this.getNewQueriedStockItemsFunc.get());
-
-        this.updateHeartBeat();
-
-    }
-
     public abstract void updateHeartBeat() throws Exception;
 
     /**
@@ -97,32 +67,20 @@ public abstract class DataManager {
      *
      * @return
      */
-    public abstract List<StockRecord> retriveSharedStocks() throws Exception;
+    public abstract List<StockRecord> retriveSharedStocksFromDB() throws Exception;
 
     /**
      * Write shares back to memory cache and database.
      *
      * @param orders
      */
-    public abstract void recordSharedStocks(Order[] orders) throws Exception;
+    public abstract void writeNewOrders2DB(Order[] orders) throws Exception;
 
     /**
      * Updates current price to database.
      *
      * @throws java.lang.Exception
      */
-    public abstract void updateCurrentPrice(StockRecord[] stockRecords) throws java.lang.Exception;
-
-    private void updateReportDateToDatabase() throws Exception {
-
-        StockRecord[] stockRecords = this.getNewQueriedStockItemsFunc.get();
-        if (Arrays.stream(stockRecords).anyMatch(stockitem -> stockitem.getReportDate() != null)) {
-            StockRecord[] stockItems = PriceMonitor.stockPriceMap.values().stream().filter(stockItem -> stockItem.getReportDate() != null).toArray(size -> new StockRecord[size]);
-            this.writeReportDate(stockItems);
-        }
-    }
-
-    protected abstract void writeReportDate(StockRecord[] stockItems) throws Exception;
 
     private static final String OrderToBuyString = "Your market order to buy";
     private static final String OrderToSellString = "Your market order to sell";

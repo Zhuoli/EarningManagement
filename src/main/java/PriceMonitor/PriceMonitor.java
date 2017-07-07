@@ -4,7 +4,6 @@ import DataManager.StockRecord;
 import PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;

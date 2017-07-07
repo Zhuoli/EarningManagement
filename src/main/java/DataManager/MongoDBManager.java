@@ -84,7 +84,7 @@ public class MongoDBManager extends DataManager {
         return this;
     }
 
-    private MongoDBManager() {
+    public MongoDBManager() {
         // Do nothing
     }
 
@@ -126,14 +126,12 @@ public class MongoDBManager extends DataManager {
 
     @Override
     /**
-     * Write shares back to mysql database.
+     * Write shares back to MongoDB database.
      */
-    public void recordSharedStocks(Order[] orders) throws Exception {
+    public void writeNewOrders2DB(Order[] orders) throws Exception {
 
         if (orders.length == 0)
             return;
-
-        this.getNewQueriedStockItemsFunc.get();
 
         // Database query result
         List<StockRecord> result = this.retrieveDcouments(MongoDBManager.EARN_SHARE_TABLE_NAME, StockRecord.class);
@@ -210,18 +208,12 @@ public class MongoDBManager extends DataManager {
     }
 
     public void writeReportDate(StockRecord[] stockItems) throws Exception {
-        this.getNewQueriedStockItemsFunc.get();
         for(StockRecord stockRecord : stockItems) {
             // Define the update query:
             BasicDBObject updateQuery = new BasicDBObject();
             updateQuery.append("$set", new BasicDBObject().append("reportDate", stockRecord.getReportDate()));
             this.updateDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, stockRecord, stockRecord.getSymbol(), updateQuery);
         }
-    }
-
-    @Override
-    public void updateCurrentPrice(StockRecord[] stockRecords){
-        this.insertDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, stockRecords);
     }
 
     public synchronized void insertDocument( String tableName, StockRecord... records){
@@ -324,8 +316,7 @@ public class MongoDBManager extends DataManager {
         return sharedStock;
     }
 
-    @Override
-    public List<StockRecord> retriveSharedStocks() throws java.lang.Exception {
+    public List<StockRecord> retriveSharedStocksFromDB() throws java.lang.Exception {
         return this.retrieveDcouments(MongoDBManager.EARN_SHARE_TABLE_NAME, StockRecord.class);
     }
 }
