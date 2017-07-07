@@ -17,7 +17,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>RunMe</mainClass>
+                            <mainClass>com.zhuoli.earning.RunMe</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
