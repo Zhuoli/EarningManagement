@@ -1,5 +1,6 @@
 package com.zhuoli.earning.DataManager;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,6 +13,7 @@ import java.util.Date;
 @Data
 @Builder
 public class StockRecord {
+    @SerializedName("_id")
     private String symbol;
     private String companyname;
     private Date reportDate;

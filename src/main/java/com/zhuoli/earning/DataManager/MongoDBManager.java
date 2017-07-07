@@ -209,9 +209,9 @@ public class MongoDBManager extends DataManager {
         }
     }
 
-    public void deleteStockRecord(String symbole){
+    public void deleteStockRecord(String symbol) {
         MongoCollection earningManagerTable = this.mongoDatabase.getCollection(MongoDBManager.EARN_SHARE_TABLE_NAME);
-        earningManagerTable.deleteOne(eq("symbol", symbole));
+        earningManagerTable.deleteOne(eq("_id", symbol));
     }
 
     public void writeReportDate(StockRecord[] stockItems) throws Exception {
@@ -234,7 +234,7 @@ public class MongoDBManager extends DataManager {
             try {
                 earningManagerTable.insertOne(doc);
             }catch (MongoWriteException exception){
-                earningManagerTable.updateOne(eq("symbol", record.getSymbol()), new org.bson.Document("$set",doc));
+                earningManagerTable.updateOne(eq("_id", record.getSymbol()), new org.bson.Document("$set", doc));
             }
         }
     }
@@ -245,7 +245,7 @@ public class MongoDBManager extends DataManager {
      */
     public synchronized  void updateDocument(String tableName, StockRecord stockRecord, String symbolValue, BasicDBObject updateFields){
         MongoCollection earningManagerTable = this.mongoDatabase.getCollection(tableName);
-        BasicDBObject searchQuery = new BasicDBObject("symbol", symbolValue);
+        BasicDBObject searchQuery = new BasicDBObject("_id", symbolValue);
         UpdateResult result = earningManagerTable.updateOne(searchQuery, updateFields);
         if (result.getMatchedCount() == 0){
             this.insertDocument(tableName, stockRecord);
