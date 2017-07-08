@@ -315,7 +315,7 @@ public class MongoDBManager extends DataManager {
         }
 
         // Calculate the new average cost
-        double newAveCost = newSum / newShares;
+        double newAveCost = Math.round(newSum * 100 / newShares) / 100;
 
         sharedStock.setShares(newShares);
         sharedStock.setSharedAverageCost(newAveCost);
