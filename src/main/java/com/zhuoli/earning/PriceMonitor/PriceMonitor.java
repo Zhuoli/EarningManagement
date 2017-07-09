@@ -1,6 +1,6 @@
 package com.zhuoli.earning.PriceMonitor;
 
-import com.zhuoli.earning.DataManager.*;
+import com.zhuoli.earning.DataManager.StockRecord;
 import com.zhuoli.earning.PriceMonitor.stock.NasdaqParser.NasdaqWebParser;
 
 import java.time.LocalDate;
@@ -37,35 +37,15 @@ public class PriceMonitor {
     }
 
     /**
-     * Register symbols to price monitor or update the average cost and number and targetPrice of existing stock.
+     * Register symbols to price monitor
      */
     public static void RegisterStockSymboles(StockRecord boughtStockItem) {
-
         // Lock the map for multi thread safe
         try {
-            synchronized (PriceMonitor.stockPriceMap) {
                 String symbol = boughtStockItem.getSymbol();
-                double averageCost = boughtStockItem.getSharedAverageCost();
-                int number = boughtStockItem.getShares();
-                double targetPriceNasdaq = 0;
-                try {
-                    targetPriceNasdaq = boughtStockItem.getTargetPrice();
-                } catch (Exception e) {
-
+            if (!PriceMonitor.stockPriceMap.containsKey(symbol)) {
+                PriceMonitor.stockPriceMap.put(symbol, boughtStockItem);
                 }
-
-                // Update stock mapper
-                if (PriceMonitor.stockPriceMap.containsKey(symbol)) {
-                    StockRecord item = PriceMonitor.stockPriceMap.get(symbol);
-                    item.setSharedAverageCost(averageCost);
-                    item.setShares(number);
-                } else {
-                    PriceMonitor.stockPriceMap.put(
-                            symbol,
-                            StockRecord.builder().symbol(symbol).timestamp(new Date()).sharedAverageCost(averageCost).shares(number).targetPrice(targetPriceNasdaq).build());
-                }
-            }
-
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "Failure to register stock symbol " + boughtStockItem.toString(), exc);
         }
@@ -100,7 +80,7 @@ public class PriceMonitor {
                 Thread.sleep(PriceMonitor.SCAN_PERIOD);
             }
 
-            Logger.getGlobal().severe("com.zhuoli.earning.PriceMonitor dropped the infinite loop");
+            Logger.getGlobal().severe("PriceMonitor dropped the infinite loop");
         } catch (Exception exc) {
             Logger.getGlobal().log(Level.SEVERE, "com.zhuoli.earning.PriceMonitor crashed.", exc);
         }
@@ -110,9 +90,12 @@ public class PriceMonitor {
         for (StockRecord stockItem : PriceMonitor.stockPriceMap.values()) {
 
             try {
-                stockItem.setCurrentPrice(nasdaqWebParser.QuoteSymbolePrice(stockItem.getSymbol()));
-
-                stockItem.setCurrentPriceLatestUpdateTime(new Date());
+                double newPrice = nasdaqWebParser.QuoteSymbolePrice(stockItem.getSymbol());
+                if (stockItem.getCurrentPrice() != newPrice) {
+                    stockItem.setCurrentPrice(newPrice);
+                    stockItem.setCurrentPriceLatestUpdateTime(new Date());
+                    stockItem.setHasUpdate(true);
+                }
 
                 // Sleep a while to avoid access limit
                 Thread.sleep(500);
@@ -122,11 +105,14 @@ public class PriceMonitor {
                 System.err.print(exc.getMessage());
             }
 
-            Optional<LocalDate> localDate = nasdaqWebParser.QupteEarningReportDate(stockItem.getSymbol());
+            Optional<LocalDate> newReportDate = nasdaqWebParser.QupteEarningReportDate(stockItem.getSymbol());
 
             // Update earning report date
-            if (localDate.isPresent()) {
-                stockItem.setReportDate(new Date());
+            if (newReportDate.isPresent()) {
+                if (stockItem.getReportDate() == null || (newReportDate.get().isAfter(stockItem.getReportDate()))) {
+                    stockItem.setReportDate(newReportDate.get());
+                    stockItem.setHasUpdate(true);
+                }
             }
         }
 

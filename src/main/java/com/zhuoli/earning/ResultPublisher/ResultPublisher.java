@@ -1,17 +1,17 @@
 package com.zhuoli.earning.ResultPublisher;
 
-import com.zhuoli.earning.EmailManager.*;
-import com.zhuoli.earning.PriceMonitor.*;
 import com.joanzapata.utils.Strings;
+import com.zhuoli.earning.DataManager.StockRecord;
+import com.zhuoli.earning.EmailManager.EmailManager;
+import com.zhuoli.earning.PriceMonitor.PriceMonitor;
 
 import javax.mail.NoSuchProviderException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import com.zhuoli.earning.DataManager.*;
 
 /**
  * User interactive via Email
@@ -116,7 +116,7 @@ public class ResultPublisher {
         StringBuilder sb = new StringBuilder();
         for (StockRecord item : stockItems) {
             if (item.getReportDate() != null) {
-                Date earningReportdate = item.getReportDate();
+                LocalDate earningReportdate = item.getReportDate();
                 sb.append(String.format("%1$-8s quarterly earning report date: %2$s ", item.getSymbol(), earningReportdate));
                 sb.append(System.lineSeparator());
             }

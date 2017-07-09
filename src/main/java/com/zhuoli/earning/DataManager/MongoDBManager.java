@@ -23,8 +23,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,8 +67,7 @@ public class MongoDBManager extends DataManager {
     /**
      * Initialize EmailMananger from XML configuration file.
      *
-     * @param pathString
-     *            : Configuration file path
+     * @param pathString : Configuration file path
      * @return: Emailmanager
      */
     public static MongoDBManager GetDatabaseManagerInstance(String pathString) {
@@ -110,16 +107,12 @@ public class MongoDBManager extends DataManager {
         }
     }
 
-    public MongoDBManager Authenticate(){
-        return this;
-    }
-
     @Override
     public void updateHeartBeat() throws Exception {
 
     }
 
-    public <T>  List<T> retrieveDcouments(String tablename, Class<T> classname){
+    public <T> List<T> retrieveDcouments(String tablename, Class<T> classname) {
         ArrayList<T> result = new ArrayList<>();
         Gson gson = new Gson();
         MongoCollection chineseStockTable = this.mongoDatabase.getCollection(tablename);
@@ -140,74 +133,34 @@ public class MongoDBManager extends DataManager {
         if (orders.length == 0)
             return;
 
-        // Database query result
-        List<StockRecord> result = this.retrieveDcouments(MongoDBManager.EARN_SHARE_TABLE_NAME, StockRecord.class);
-
-        // Map query result to StockItems
-        HashMap<String, StockRecord> dbStockMap = new HashMap<>();
-        result.stream().forEach(stockRecord -> dbStockMap.put(stockRecord.getSymbol(), stockRecord));
-
         // Check each email order
         for (Order order : orders) {
-            StockRecord updatedStockRecord;
-            // If in table, update row
-            if (dbStockMap.containsKey(order.getSymbol())) {
-                updatedStockRecord = dbStockMap.get(order.getSymbol());
+            if (PriceMonitor.stockPriceMap.containsKey(order.getSymbol())) {
+                StockRecord toBeUpdatedRecord = PriceMonitor.stockPriceMap.get(order.getSymbol());
 
-                // Update local stock record from database table, this unlikely happen unless db be
-                // changed in other way
-                synchronized (PriceMonitor.stockPriceMap) {
-                    StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.getSymbol());
-                    if (stockItem != null
-                            && stockItem.getTimestamp().before(updatedStockRecord.getTimestamp()))
-                        PriceMonitor.stockPriceMap.put(order.getSymbol(), updatedStockRecord);
-                }
-
-                updatedStockRecord = this.UpdateStockShares(updatedStockRecord, order);
+                toBeUpdatedRecord = this.UpdateStockShares(toBeUpdatedRecord, order);
 
                 // Delete shares
-                if (updatedStockRecord.getShares() == 0) {
+                if (toBeUpdatedRecord.getShares() == 0) {
                     // Deletes this record from the database, based on the value of the primary key
                     // or main unique key.
-                    this.deleteStockRecord(updatedStockRecord.getSymbol());
-                    continue;
-
-                } else {
-
-                    synchronized (PriceMonitor.stockPriceMap) {
-                        StockRecord stockItem = PriceMonitor.stockPriceMap.get(order.getSymbol());
-                        if (stockItem != null) {
-                            // Write report date
-                            updatedStockRecord.setReportDate(stockItem.getReportDate());
-
-                        }
-                    }
-
-                    // Update time stamp on each DB update
-                    updatedStockRecord.setTimestamp(new Date());
-
-                    // Store this record back to the database using an UPDATE statement.
-                    this.updateDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, updatedStockRecord);
+                    this.deleteStockRecord(toBeUpdatedRecord.getSymbol());
+                    PriceMonitor.stockPriceMap.remove(toBeUpdatedRecord.getSymbol());
                 }
-
             } else {
-                updatedStockRecord = StockRecord.builder().symbol(order.getSymbol()).shares(order.getShares()).sharedAverageCost(order.getPrice()).timestamp(new Date()).build();
-                this.insertDocument(MongoDBManager.EARN_SHARE_TABLE_NAME,updatedStockRecord);
-
-                dbStockMap.put(updatedStockRecord.getSymbol(), updatedStockRecord);
-                System.out.println("New row inserted " + order);
+                synchronized (PriceMonitor.stockPriceMap) {
+                    StockRecord stockItem = StockRecord.builder().symbol(order.getSymbol()).sharedAverageCost(order.getPrice()).shares(order.getShares()).build();
+                    if (order.getType() == OrderType.SELL) {
+                        stockItem.setShares(-order.getShares());
+                    }
+                    PriceMonitor.stockPriceMap.put(stockItem.getSymbol(), stockItem);
+                    this.insertDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, stockItem);
+                }
             }
-
-            // Update local stock record to the latest one
-            synchronized (PriceMonitor.stockPriceMap) {
-
-                Assert.assertNotNull("updatedStockRecord should never be null", updatedStockRecord);
-
-                PriceMonitor.stockPriceMap.put(order.getSymbol(), updatedStockRecord);
-            }
-
+            System.out.println("New row inserted " + order);
         }
     }
+
 
     public void deleteStockRecord(String symbol) {
         MongoCollection earningManagerTable = this.mongoDatabase.getCollection(MongoDBManager.EARN_SHARE_TABLE_NAME);
@@ -223,7 +176,12 @@ public class MongoDBManager extends DataManager {
         }
     }
 
-    public synchronized void insertDocument( String tableName, StockRecord... records){
+    @Override
+    public void updateStockRecords(StockRecord... stockRecords) {
+        this.insertDocument(MongoDBManager.EARN_SHARE_TABLE_NAME, stockRecords);
+    }
+
+    public synchronized void insertDocument(String tableName, StockRecord... records) {
         MongoCollection earningManagerTable = this.mongoDatabase.getCollection(tableName);
         Gson gson = new Gson();
         for(StockRecord record : records){

@@ -1,9 +1,11 @@
 package com.zhuoli.earning.DataManager;
 
-import com.zhuoli.earning.EmailManager.*;
-import com.zhuoli.earning.PriceMonitor.*;
-import com.zhuoli.earning.Utility.*;
+import com.zhuoli.earning.EmailManager.EmailManager;
+import com.zhuoli.earning.EmailManager.MonitorEmail;
+import com.zhuoli.earning.PriceMonitor.PriceMonitor;
+import com.zhuoli.earning.Utility.RetryManager;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,6 +16,14 @@ import java.util.logging.Logger;
  */
 public abstract class DataManager {
 
+    /**
+     * Updates current price to database.
+     *
+     * @throws java.lang.Exception
+     */
+
+    private static final String OrderToBuyString = "Your market order to buy";
+    private static final String OrderToSellString = "Your market order to sell";
     /**
      * Get ne queried stock items function
      */
@@ -26,22 +36,24 @@ public abstract class DataManager {
     public void Start() {
         try {
 
-            // Retrieve Robinhood emails which has been read.
-            MonitorEmail[] seenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", true);
-            Order[] seenOrders = this.CheckForNewOrdersPlaced(seenRobinHoodEmails);
-            this.writeNewOrders2DB(seenOrders);
+            // Write shares from Database back to memory cache
+//            this.retriveSharedStocksFromDB().stream().forEach(stockItem -> PriceMonitor.RegisterStockSymboles(stockItem));
 
             int errorCount = 0;
             while (true) {
                 try {
-                    // Write/Override shares from Database back to memory cache
-                    this.retriveSharedStocksFromDB().stream().forEach(stockItem -> PriceMonitor.RegisterStockSymboles(stockItem));
 
                     // Check email for new orders
                     MonitorEmail[] unseenRobinHoodEmails = emailManager.ReceiveEmailsFrom("notifications@robinhood.com", false);
                     Order[] newOrders = this.CheckForNewOrdersPlaced(unseenRobinHoodEmails);
 
                     this.writeNewOrders2DB(newOrders);
+                    StockRecord[] needUpdatedStockRecords = null;
+                    synchronized (PriceMonitor.stockPriceMap) {
+                        needUpdatedStockRecords = PriceMonitor.stockPriceMap.values().stream().filter(record -> record.isHasUpdate()).toArray(StockRecord[]::new);
+                    }
+                    Arrays.stream(needUpdatedStockRecords).forEach(stockRecord -> stockRecord.setHasUpdate(false));
+                    this.updateStockRecords(needUpdatedStockRecords);
 
                     this.updateHeartBeat();
 
@@ -58,6 +70,8 @@ public abstract class DataManager {
         }
     }
 
+    public abstract void updateStockRecords(StockRecord... stockRecords);
+
     public abstract void updateHeartBeat() throws Exception;
 
     /**
@@ -73,15 +87,6 @@ public abstract class DataManager {
      * @param orders
      */
     public abstract void writeNewOrders2DB(Order[] orders) throws Exception;
-
-    /**
-     * Updates current price to database.
-     *
-     * @throws java.lang.Exception
-     */
-
-    private static final String OrderToBuyString = "Your market order to buy";
-    private static final String OrderToSellString = "Your market order to sell";
 
     /**
      * Query email box to see if has new stock order been placed.
