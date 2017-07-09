@@ -1,9 +1,9 @@
 package com.zhuoli.earning.PriceMonitor.stock;
 
 import com.joanzapata.utils.Strings;
+import com.zhuoli.earning.PriceMonitor.PriceMonitor;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import com.zhuoli.earning.PriceMonitor.PriceMonitor;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -22,42 +22,18 @@ public class StockPriceMonitor extends PriceMonitor {
     static final String BASE_URL = "http://dev.markitondemand.com/MODApis/Api/v2";
 
     /**
-     * Get stock price for the given Symbol.
-     *
-     * @param symbol
-     * @return price
-     */
-    public double GetPrice(String symbol) throws Exception {
-        String url = this.ComposeQuoteUrl(symbol);
-        String response = this.GetHttpResponse(url);
-
-        try {
-
-            JSONObject jsonObj = new JSONObject(response);
-            return jsonObj.getDouble("LastPrice");
-        } catch (Exception exc) {
-            throw new Exception("Error on parsing price of url + " + url + " for soap string " + response);
-        }
-    }
-
-    /**
      * Company name look up.
      *
      * @param symbol
      * @return company name
      */
-    public String[] CompanyLookUp(String symbol) throws Exception {
-        String url = this.ComposeLookupUrl(symbol);
-        String soapString = this.GetHttpResponse(url);
-        return this.GetCompanyName(soapString, symbol);
+    public static String[] CompanyLookUp(String symbol) throws Exception {
+        String url = StockPriceMonitor.ComposeLookupUrl(symbol);
+        String soapString = StockPriceMonitor.GetHttpResponse(url);
+        return StockPriceMonitor.GetCompanyName(soapString, symbol);
     }
 
-    protected String ComposeQuoteUrl(String symbol) {
-
-        return Strings.format("{baseUrl}/{action}/{type}?symbol={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Quote").with("type", "json").with("symbol", symbol).build();
-    }
-
-    protected String ComposeLookupUrl(String symbol) {
+    protected static String ComposeLookupUrl(String symbol) {
         return Strings.format("{baseUrl}/{action}/{type}?input={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Lookup").with("type", "json").with("symbol", symbol).build();
     }
 
@@ -67,7 +43,7 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param url : url of soap address
      * @return soap string
      */
-    protected String GetHttpResponse(String url) throws Exception {
+    protected static String GetHttpResponse(String url) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 
         connection.setRequestMethod("GET");
@@ -95,7 +71,7 @@ public class StockPriceMonitor extends PriceMonitor {
      * @param soapString
      * @return
      */
-    protected String[] GetCompanyName(String soapString, String symbol) throws Exception {
+    protected static String[] GetCompanyName(String soapString, String symbol) throws Exception {
         JSONArray jsonArray = new JSONArray(soapString);
         List<String> nameList = new LinkedList<>();
         try {
@@ -111,5 +87,29 @@ public class StockPriceMonitor extends PriceMonitor {
         } catch (Exception exc) {
             throw new Exception("Error on parsing company name from soap string: " + soapString);
         }
+    }
+
+    /**
+     * Get stock price for the given Symbol.
+     *
+     * @param symbol
+     * @return price
+     */
+    public double GetPrice(String symbol) throws Exception {
+        String url = this.ComposeQuoteUrl(symbol);
+        String response = this.GetHttpResponse(url);
+
+        try {
+
+            JSONObject jsonObj = new JSONObject(response);
+            return jsonObj.getDouble("LastPrice");
+        } catch (Exception exc) {
+            throw new Exception("Error on parsing price of url + " + url + " for soap string " + response);
+        }
+    }
+
+    protected String ComposeQuoteUrl(String symbol) {
+
+        return Strings.format("{baseUrl}/{action}/{type}?symbol={symbol}").with("baseUrl", StockPriceMonitor.BASE_URL).with("action", "Quote").with("type", "json").with("symbol", symbol).build();
     }
 }

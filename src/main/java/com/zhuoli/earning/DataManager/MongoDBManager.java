@@ -10,6 +10,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.result.UpdateResult;
 import com.zhuoli.earning.PriceMonitor.PriceMonitor;
+import com.zhuoli.earning.PriceMonitor.stock.StockPriceMonitor;
 import org.junit.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -150,6 +151,10 @@ public class MongoDBManager extends DataManager {
             } else {
                 synchronized (PriceMonitor.stockPriceMap) {
                     StockRecord stockItem = StockRecord.builder().symbol(order.getSymbol()).sharedAverageCost(order.getPrice()).shares(order.getShares()).build();
+                    String[] companyNames = StockPriceMonitor.CompanyLookUp(order.getSymbol());
+                    if (companyNames.length != 0) {
+                        stockItem.setCompanyname(companyNames[0]);
+                    }
                     if (order.getType() == OrderType.SELL) {
                         stockItem.setShares(-order.getShares());
                     }
